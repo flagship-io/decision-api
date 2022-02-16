@@ -1,11 +1,9 @@
 package apilogic
 
 import (
-	"log"
-
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
 )
 
 // SendVisitorContext sends a pubsub event to handle visitor context
@@ -27,8 +25,10 @@ func SendVisitorContext(handleRequest *handle.Request) {
 		Timestamp: handleRequest.Time.UnixNano() / 1000000,
 	}
 
-	err := handleRequest.DecisionContext.HitProcessor.TrackHits([]connectors.TrackingHit{visitorContext})
+	err := handleRequest.DecisionContext.HitProcessor.TrackHits(connectors.TrackingHits{VisitorContext: []*models.VisitorContext{
+		visitorContext,
+	}})
 	if err != nil {
-		log.Printf("Error on queuing visitor context : %v", err)
+		handleRequest.Logger.Errorf("Error on queuing visitor context : %v", err)
 	}
 }

@@ -6,15 +6,15 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	protoStruct "github.com/golang/protobuf/ptypes/struct"
 
 	"github.com/golang/protobuf/jsonpb"
 )
 
-func Campaign(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func Campaign(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestCampaignHandler, utils.NewTracker())
 	}

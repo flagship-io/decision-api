@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/golang/protobuf/jsonpb"
 	"gitlab.com/canarybay/protobuf/ptypes.git/activate_request"
 )
 
-func Activate(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		activateRequest := &activate_request.ActivateRequest{}
 		if err := jsonpb.Unmarshal(req.Body, activateRequest); err != nil {
@@ -35,16 +35,19 @@ func Activate(context *models.DecisionContext) func(http.ResponseWriter, *http.R
 			visitorID = activateRequest.Aid.Value
 		}
 
-		context.HitProcessor.TrackHits([]connectors.TrackingHit{
-			&models.CampaignActivation{
-				EnvID:       activateRequest.Cid,
-				VisitorID:   visitorID,
-				CustomerID:  activateRequest.Vid,
-				CampaignID:  activateRequest.Caid,
-				VariationID: activateRequest.Vaid,
-				Timestamp:   now.UnixNano() / 1000000,
-			},
-		})
+		context.HitProcessor.TrackHits(
+			connectors.TrackingHits{
+				CampaignActivations: []*models.CampaignActivation{
+					&models.CampaignActivation{
+						EnvID:       activateRequest.Cid,
+						VisitorID:   visitorID,
+						CustomerID:  activateRequest.Vid,
+						CampaignID:  activateRequest.Caid,
+						VariationID: activateRequest.Vaid,
+						Timestamp:   now.UnixNano() / 1000000,
+					},
+				},
+			})
 
 		// Return a response with a 200 OK status and the campaign payload as an example
 		utils.WriteNoContent(w)

@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/golang/protobuf/jsonpb"
 	"gitlab.com/canarybay/protobuf/ptypes.git/activate_request"
 )
 
-func ActivateMultiple(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func ActivateMultiple(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		now := time.Now()
 		envID := context.EnvID
@@ -31,7 +31,7 @@ func ActivateMultiple(context *models.DecisionContext) func(http.ResponseWriter,
 			return
 		}
 
-		campaignActivations := []connectors.TrackingHit{}
+		campaignActivations := []*models.CampaignActivation{}
 		for _, a := range activateRequest.Activations {
 			visitorID := activateRequest.VisitorId
 			if a.VisitorId != "" {
@@ -46,7 +46,9 @@ func ActivateMultiple(context *models.DecisionContext) func(http.ResponseWriter,
 			})
 		}
 
-		context.HitProcessor.TrackHits(campaignActivations)
+		context.HitProcessor.TrackHits(connectors.TrackingHits{
+			CampaignActivations: campaignActivations,
+		})
 
 		// Return a response with a 204 OK status and an empty payload
 		utils.WriteNoContent(w)

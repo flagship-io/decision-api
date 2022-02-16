@@ -7,8 +7,8 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func Campaigns(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func Campaigns(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestCampaignsHandler, utils.NewTracker())
 	}

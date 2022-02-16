@@ -7,13 +7,14 @@ import (
 	"sync"
 
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	common "github.com/flagship-io/flagship-common"
 )
 
 // HandleCampaigns get campaigns from request, add checks and side effect and return response
-func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *models.DecisionContext, handleDecision func(http.ResponseWriter, *handle.Request, error), tracker *common.Tracker) {
+func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *connectors.DecisionContext, handleDecision func(http.ResponseWriter, *handle.Request, error), tracker *common.Tracker) {
 	handleRequest, err := BuildHandleRequest(req)
 	handleRequest.DecisionContext = decisionContext
 	if err != nil {

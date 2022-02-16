@@ -4,16 +4,16 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/handlers"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
 type ServerOptions struct {
-	experienceTracker       connectors.HitProcessor
-	environmentLoader       connectors.EnvironmentLoader
-	visitorAssignmentLoader connectors.VisitorAssignmentLoader
-	visitorAssignmentSaver  connectors.VisitorAssignmentSaver
+	experienceTracker  connectors.HitProcessor
+	environmentLoader  connectors.EnvironmentLoader
+	AssignmentsManager connectors.AssignmentsManager
+	logger             *logger.Logger
 }
 
 type ServerOptionsBuilder func(*ServerOptions)
@@ -30,15 +30,15 @@ func WithEnvironmentLoader(loader connectors.EnvironmentLoader) ServerOptionsBui
 	}
 }
 
-func WithVisitorAssignmentLoader(loader connectors.VisitorAssignmentLoader) ServerOptionsBuilder {
+func WithAssignmentsManager(manager connectors.AssignmentsManager) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
-		h.visitorAssignmentLoader = loader
+		h.AssignmentsManager = manager
 	}
 }
 
-func WithVisitorAssignmentSaver(saver connectors.VisitorAssignmentSaver) ServerOptionsBuilder {
+func WithLogger(logger *logger.Logger) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
-		h.visitorAssignmentSaver = saver
+		h.logger = logger
 	}
 }
 
@@ -53,8 +53,13 @@ func (srv *Server) Listen(addr string) error {
 
 func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*Server, error) {
 	serverOptions := &ServerOptions{}
+
 	for _, opt := range opts {
 		opt(serverOptions)
+	}
+
+	if serverOptions.logger == nil {
+		return nil, errors.New("missing mandatory logger")
 	}
 
 	if serverOptions.environmentLoader == nil {
@@ -65,22 +70,23 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		return nil, errors.New("missing mandatory experienceTracker connector")
 	}
 
-	if serverOptions.visitorAssignmentLoader == nil {
+	if serverOptions.AssignmentsManager == nil {
 		return nil, errors.New("missing mandatory visitorAssignmentLoader connector")
 	}
 
-	if serverOptions.visitorAssignmentSaver == nil {
-		return nil, errors.New("missing mandatory visitorAssignmentSaver connector")
+	err := serverOptions.environmentLoader.Init(envID, apiKey)
+	if err != nil {
+		serverOptions.logger.Errorf("error when initializing environment loader: %v", err)
 	}
 
-	context := &models.DecisionContext{
+	context := &connectors.DecisionContext{
 		APIKey: apiKey,
 		EnvID:  envID,
+		Logger: serverOptions.logger,
 		Connectors: connectors.Connectors{
-			HitProcessor:            serverOptions.experienceTracker,
-			EnvironmentLoader:       serverOptions.environmentLoader,
-			VisitorAssignmentLoader: serverOptions.visitorAssignmentLoader,
-			VisitorAssignmentSaver:  serverOptions.visitorAssignmentSaver,
+			HitProcessor:       serverOptions.experienceTracker,
+			EnvironmentLoader:  serverOptions.environmentLoader,
+			AssignmentsManager: serverOptions.AssignmentsManager,
 		},
 	}
 

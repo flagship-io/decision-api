@@ -2,20 +2,18 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/golang/protobuf/jsonpb"
 	"gitlab.com/canarybay/protobuf/ptypes.git/event_request"
 )
 
-func Events(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func Events(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		now := time.Now()
 		eventRequest := &event_request.EventRequest{}
@@ -36,18 +34,23 @@ func Events(context *models.DecisionContext) func(http.ResponseWriter, *http.Req
 				contextMap[k] = v.AsInterface()
 			}
 			err := context.HitProcessor.TrackHits(
-				[]connectors.TrackingHit{&models.VisitorContext{
-					EnvID:     context.EnvID,
-					VisitorID: eventRequest.VisitorId.Value,
-					Context:   contextMap,
-					Timestamp: now.UnixNano() / 1000000,
-				}},
+				connectors.TrackingHits{
+					VisitorContext: []*models.VisitorContext{
+						{
+							EnvID:     context.EnvID,
+							VisitorID: eventRequest.VisitorId.Value,
+							Context:   contextMap,
+							Timestamp: now.UnixNano() / 1000000,
+						},
+					},
+				},
 			)
 			if err != nil {
-				log.Printf("Error when queuing event request : %v", err)
+				context.Logger.Errorf("error when tracking event request : %v", err)
 			}
+			context.Logger.Info("event tracked successfully")
 		default:
-			fmt.Printf("Type of event %v not handled", eventRequest.Type)
+			context.Logger.Errorf("type of event %v not handled", eventRequest.Type)
 		}
 		utils.WriteNoContent(w)
 	}

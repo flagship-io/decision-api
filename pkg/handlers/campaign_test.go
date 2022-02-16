@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestCampaignAssignment(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaign(&models.DecisionContext{
+	Campaign(&DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
 	})(w, req)
@@ -48,7 +47,7 @@ func TestCampaignAssignment(t *testing.T) {
 	url, _ = url.Parse("/campaigns/image?sendContextEvent=false&format_response=true")
 	req.Body = io.NopCloser(strings.NewReader(body))
 
-	Campaign(&models.DecisionContext{
+	Campaign(&DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
 	})(w, req)

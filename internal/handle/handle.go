@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 
 	"github.com/flagship-io/flagship-proto/decision_response"
@@ -17,7 +18,7 @@ import (
 // Request represents the infos of the requests needed for the decision API
 type Request struct {
 	DecisionRequest  *decision_request.DecisionRequest
-	DecisionContext  *models.DecisionContext
+	DecisionContext  *connectors.DecisionContext
 	DecisionResponse *decision_response.DecisionResponse
 	Environment      *common.Environment
 	CampaignID       string
@@ -26,6 +27,7 @@ type Request struct {
 	ExposeAllKeys    bool
 	SendContextEvent bool
 	Time             time.Time
+	Logger           *logger.Logger
 }
 
 func NewRequestFromHTTP(req *http.Request) Request {
@@ -78,15 +80,15 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			ExposeAllKeys:     handleRequest.ExposeAllKeys,
 		}, common.DecisionHandlers{
 			GetCache: func(environmentID, id string) (*common.VisitorAssignments, error) {
-				return handleRequest.DecisionContext.VisitorAssignmentLoader.LoadAssignments(environmentID, id)
+				return handleRequest.DecisionContext.AssignmentsManager.LoadAssignments(environmentID, id)
 			},
 			SaveCache: func(environmentID, id string, assignment *common.VisitorAssignments) error {
-				handleRequest.DecisionContext.VisitorAssignmentSaver.SaveAssignments(environmentID, id, assignment.Assignments, handleRequest.Time)
+				handleRequest.DecisionContext.AssignmentsManager.SaveAssignments(environmentID, id, assignment.Assignments, handleRequest.Time)
 				return nil
 			},
 			ActivateCampaigns: func(activations []*common.VisitorActivation) error {
 				// Initialize future campaign activations
-				cActivations := []connectors.TrackingHit{}
+				cActivations := []*models.CampaignActivation{}
 				for _, a := range activations {
 					cActivations = append(cActivations, &models.CampaignActivation{
 						EnvID:       a.EnvironmentID,
@@ -97,7 +99,9 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 						Timestamp:   handleRequest.Time.UnixNano() / 1000000,
 					})
 				}
-				return handleRequest.DecisionContext.HitProcessor.TrackHits(cActivations)
+				return handleRequest.DecisionContext.HitProcessor.TrackHits(connectors.TrackingHits{
+					CampaignActivations: cActivations,
+				})
 			},
 		})
 

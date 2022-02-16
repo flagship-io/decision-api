@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"reflect"
 	"strings"
 	"unicode"
@@ -53,19 +52,14 @@ func LoadPropTypes(obj interface{}) {
 		case strings.Contains(t, "int"):
 			proptypes[n] = "int"
 			break
-
 		case strings.Contains(t, "bool"):
 			proptypes[n] = "bool"
 			break
-
 		case strings.Contains(t, "float"):
 			proptypes[n] = "float"
 			break
-
 		}
 	}
-
-	log.Printf("property types loaded: %s", proptypes)
 }
 
 func resolveMapType(t string) string {

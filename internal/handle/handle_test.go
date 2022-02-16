@@ -3,7 +3,6 @@ package handle
 import (
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
 
 	"gitlab.com/canarybay/protobuf/ptypes.git/decision_request"
@@ -98,7 +97,7 @@ func TestDecision1Vis1Test(t *testing.T) {
 		UseReconciliation: false,
 	}
 	handleRequest := Request{
-		DecisionContext: &models.DecisionContext{
+		DecisionContext: &DecisionContext{
 			EnvID: clientID,
 		},
 		DecisionRequest: &decision_request.DecisionRequest{
@@ -120,7 +119,7 @@ func TestDecisionNoReconciliation(t *testing.T) {
 	anonymousID := "1234"
 	clientID := "client_id"
 	handleRequest := Request{
-		DecisionContext: &models.DecisionContext{
+		DecisionContext: &DecisionContext{
 			EnvID: clientID,
 		},
 		DecisionRequest: &decision_request.DecisionRequest{
@@ -177,7 +176,7 @@ func TestDecisionReconciliation(t *testing.T) {
 	anonymousID := "1234"
 	clientID := "client_id"
 	handleRequest := Request{
-		DecisionContext: &models.DecisionContext{
+		DecisionContext: &DecisionContext{
 			EnvID: clientID,
 		},
 		DecisionRequest: &decision_request.DecisionRequest{

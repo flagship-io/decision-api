@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/models"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
 const defaultBatchingWindow = time.Second * 30
@@ -28,16 +29,18 @@ type DataCollectTracker struct {
 	batchingWindow time.Duration
 	batchSize      int
 	trackingURL    string
-	hits           []connectors.TrackingHit
+	hits           []models.MappableHit
 	ticker         *time.Ticker
+	logger         *logger.Logger
 }
 
-func NewDataCollectTracker() *DataCollectTracker {
+func NewDataCollectTracker(logLevel string) *DataCollectTracker {
 	tracker := &DataCollectTracker{
 		batchingWindow: defaultBatchingWindow,
 		batchSize:      defaultBatchSize,
-		hits:           []connectors.TrackingHit{},
+		hits:           []models.MappableHit{},
 		trackingURL:    defaultTrackingURL,
+		logger:         logger.New(logLevel, "DataCollect Tracker"),
 	}
 
 	tracker.ticker = time.NewTicker(tracker.batchingWindow)
@@ -86,32 +89,37 @@ func (d *DataCollectTracker) sendBatchHit() {
 
 	json_data, err := json.Marshal(batchHit)
 	if err != nil {
-		log.Printf("error when marshaling batch hit: %v", err)
+		d.logger.Errorf("error when marshaling batch hit: %v", err)
 	}
 
-	log.Printf("sending hits to datacollect: %v", string(json_data))
+	d.logger.Infof("sending hits to datacollect: %v", string(json_data))
 	req, err := http.NewRequest(http.MethodPost, d.trackingURL, bytes.NewBuffer(json_data))
 	if err != nil {
-		log.Printf("error when marshaling batch hit: %v", err)
+		d.logger.Errorf("error when marshaling batch hit: %v", err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		log.Printf("error when sending batch hit: %v", err)
+		d.logger.Errorf("error when sending batch hit: %v", err)
 		return
 	}
 
 	if resp.StatusCode >= 400 {
-		log.Printf("error when sending batch hit: %v", resp.Status)
+		d.logger.Errorf("error when sending batch hit: %v", resp.Status)
 		return
 	}
+	d.logger.Infof("%d hits sent to datacollect successfully", len(hits))
 
-	d.hits = []connectors.TrackingHit{}
+	d.hits = []models.MappableHit{}
 }
 
-func (d *DataCollectTracker) TrackHits(hits []connectors.TrackingHit) error {
-	d.hits = append(d.hits, hits...)
+func (d *DataCollectTracker) TrackHits(hits connectors.TrackingHits) error {
+	mappableHits := []models.MappableHit{}
+	for _, ca := range hits.CampaignActivations {
+		mappableHits = append(mappableHits, ca)
+	}
+	d.hits = append(d.hits, mappableHits...)
 	if len(d.hits) >= d.batchSize {
 		d.ticker.Reset(d.batchingWindow)
 		d.sendBatchHit()

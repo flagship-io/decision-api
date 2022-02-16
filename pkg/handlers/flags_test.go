@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +23,7 @@ func TestFlagsAssignment(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaigns(&models.DecisionContext{
+	Campaigns(&DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
 	})(w, req)

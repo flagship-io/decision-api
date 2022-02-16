@@ -2,15 +2,21 @@ package models
 
 import "time"
 
+type MappableHit interface {
+	ToMap() map[string]interface{}
+	ComputeQueueTime()
+}
+
 // CampaignActivation represents a single campaign activation
 type CampaignActivation struct {
-	EnvID       string `json:"cid"`
-	VisitorID   string `json:"vid"`
-	CustomerID  string `json:"cuid"`
-	CampaignID  string `json:"caid"`
-	VariationID string `json:"vaid"`
-	Timestamp   int64
-	QueueTime   int64 `json:"qt"`
+	EnvID           string `json:"cid"`
+	VisitorID       string `json:"vid"`
+	CustomerID      string `json:"cuid"`
+	CampaignID      string `json:"caid"`
+	VariationID     string `json:"vaid"`
+	Timestamp       int64
+	PersistActivate bool
+	QueueTime       int64 `json:"qt"`
 }
 
 func (c *CampaignActivation) ComputeQueueTime() {

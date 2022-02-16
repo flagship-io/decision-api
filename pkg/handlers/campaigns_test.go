@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/joho/godotenv"
@@ -35,7 +34,7 @@ func TestCampaignsAssignment(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaigns(&models.DecisionContext{
+	Campaigns(&DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
 	})(w, req)

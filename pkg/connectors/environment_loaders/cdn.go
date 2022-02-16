@@ -4,23 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/bucketing"
 	bucketingProto "github.com/flagship-io/flagship-proto/bucketing"
 	"github.com/flagship-io/flagship-proto/decision_response"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const defaultBaseURL = "https://cdn.flagship.io"
 const defaultTimeout = time.Second * 2
 const defaultPollingInterval = time.Second * 5
+const logName = "CDN Loader"
 
 type CDNLoader struct {
 	baseURL           string
@@ -28,20 +30,46 @@ type CDNLoader struct {
 	timeout           time.Duration
 	pollingInternal   time.Duration
 	loadedEnvironment *common.Environment
+	logger            *logger.Logger
 }
 
-func NewCDNLoader(envID string, APIKey string) *CDNLoader {
+type CDNLoaderOptionBuilder func(*CDNLoader)
+
+func WithPollingInterval(pollingInterval time.Duration) CDNLoaderOptionBuilder {
+	return func(l *CDNLoader) {
+		l.pollingInternal = pollingInterval
+	}
+}
+
+func WithLogLevel(lvl string) CDNLoaderOptionBuilder {
+	return func(l *CDNLoader) {
+		l.logger = logger.New(lvl, logName)
+	}
+}
+
+func NewCDNLoader(opts ...CDNLoaderOptionBuilder) *CDNLoader {
 	loader := &CDNLoader{
 		baseURL:         defaultBaseURL,
 		timeout:         defaultTimeout,
 		pollingInternal: defaultPollingInterval,
+		logger:          logger.New(logrus.WarnLevel.String(), logName),
 	}
 
+	for _, o := range opts {
+		o(loader)
+	}
+
+	return loader
+}
+
+func (loader *CDNLoader) Init(envID string, APIKey string) error {
 	ticker := time.NewTicker(loader.pollingInternal)
 	done := make(chan bool, 1)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	loader.logger.Info("initialize CDN loader")
 
 	go func() {
 		for {
@@ -61,8 +89,7 @@ func NewCDNLoader(envID string, APIKey string) *CDNLoader {
 		done <- true
 	}()
 
-	loader.fetchEnvironment(envID, APIKey)
-	return loader
+	return loader.fetchEnvironment(envID, APIKey)
 }
 
 func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
@@ -77,12 +104,12 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	req.Header.Set("If-Modified-Since", l.lastModified)
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("an error occured when fetching environment: %v", err)
+		l.logger.Errorf("an error occured when fetching environment: %v", err)
 		return err
 	}
 
 	if resp.StatusCode >= 400 {
-		log.Printf("an HTTP error occured when fetching environment: %v", resp.Status)
+		l.logger.Errorf("an HTTP error occured when fetching environment: %v", resp.Status)
 		return errors.New("environment loader HTTP error")
 	}
 
@@ -92,7 +119,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 
 	response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("error when reading body: %v", err)
+		l.logger.Errorf("error when reading body: %v", err)
 		return err
 	}
 
@@ -100,7 +127,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	err = (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(response, conf)
 
 	if err != nil {
-		log.Printf("an error occured when parsing environment: %v", err)
+		l.logger.Errorf("an error occured when parsing environment: %v", err)
 		return err
 	}
 
@@ -118,6 +145,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 		CacheEnabled:      true,
 	}
 	l.lastModified = resp.Header.Get("Last-Modified")
+	l.logger.Infof("environment with id %s loaded", envID)
 
 	return nil
 }

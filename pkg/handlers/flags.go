@@ -6,8 +6,8 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/models"
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/golang/protobuf/jsonpb"
 	"gitlab.com/canarybay/protobuf/ptypes.git/flags"
@@ -31,7 +31,7 @@ type FlagInfo struct {
 	Metadata FlagMetadata `json:"metadata"`
 }
 
-func Flags(context *models.DecisionContext) func(http.ResponseWriter, *http.Request) {
+func Flags(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestFlagsHandler, utils.NewTracker())
 	}

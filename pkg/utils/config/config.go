@@ -1,0 +1,56 @@
+package config
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/spf13/viper"
+)
+
+type Config struct {
+	*viper.Viper
+}
+
+func NewFromFilename(name string) (*Config, error) {
+	v := viper.New()
+	v.SetConfigFile(name)
+
+	v.SetDefault("port", ServerPort)
+	v.SetDefault("log_level", LoggerLevel)
+	v.SetDefault("polling_interval", CDNLoaderPollingInterval)
+
+	// replace dot in key name by underscore
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
+
+	if err := v.ReadInConfig(); err != nil {
+		return &Config{v}, fmt.Errorf("viper.ReadInConfig: %w", err)
+	}
+
+	return &Config{v}, nil
+}
+
+func (c *Config) GetStringDefault(key, def string) string {
+	if !c.Viper.IsSet(key) {
+		return def
+	}
+
+	return c.Viper.GetString(key)
+}
+
+func (c *Config) GetDurationDefault(key string, def time.Duration) time.Duration {
+	if !c.Viper.IsSet(key) {
+		return def
+	}
+
+	return c.Viper.GetDuration(key)
+}
+
+func (c *Config) GetIntDefault(key string, def int) int {
+	if !c.Viper.IsSet(key) {
+		return def
+	}
+
+	return c.Viper.GetInt(key)
+}
