@@ -25,7 +25,7 @@ func SendVisitorContext(handleRequest *handle.Request) {
 		Timestamp: handleRequest.Time.UnixNano() / 1000000,
 	}
 
-	err := handleRequest.DecisionContext.HitProcessor.TrackHits(connectors.TrackingHits{VisitorContext: []*models.VisitorContext{
+	err := handleRequest.DecisionContext.HitsProcessor.TrackHits(connectors.TrackingHits{VisitorContext: []*models.VisitorContext{
 		visitorContext,
 	}})
 	if err != nil {

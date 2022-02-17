@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"gitlab.com/canarybay/protobuf/ptypes.git/decision_request"
+	"github.com/flagship-io/flagship-proto/decision_request"
 
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/stretchr/testify/assert"
-
-	structpb "github.com/golang/protobuf/ptypes/struct"
 )
 
 var vgTest *common.VariationGroup = &common.VariationGroup{
@@ -97,12 +97,12 @@ func TestDecision1Vis1Test(t *testing.T) {
 		UseReconciliation: false,
 	}
 	handleRequest := Request{
-		DecisionContext: &DecisionContext{
+		DecisionContext: &connectors.DecisionContext{
 			EnvID: clientID,
 		},
 		DecisionRequest: &decision_request.DecisionRequest{
-			VisitorId:  &wrappers.StringValue{Value: visID1},
-			TriggerHit: &wrappers.BoolValue{Value: false},
+			VisitorId:  &wrapperspb.StringValue{Value: visID1},
+			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
 		},
 		Environment: &clientInfos,
@@ -119,12 +119,12 @@ func TestDecisionNoReconciliation(t *testing.T) {
 	anonymousID := "1234"
 	clientID := "client_id"
 	handleRequest := Request{
-		DecisionContext: &DecisionContext{
+		DecisionContext: &connectors.DecisionContext{
 			EnvID: clientID,
 		},
 		DecisionRequest: &decision_request.DecisionRequest{
-			VisitorId:  &wrappers.StringValue{Value: anonymousID},
-			TriggerHit: &wrappers.BoolValue{Value: false},
+			VisitorId:  &wrapperspb.StringValue{Value: anonymousID},
+			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
 		},
 	}
@@ -161,8 +161,8 @@ func TestDecisionNoReconciliation(t *testing.T) {
 
 	// Login the user
 	loggedInID := "vis_id_2"
-	handleRequest.DecisionRequest.VisitorId = &wrappers.StringValue{Value: loggedInID}
-	handleRequest.DecisionRequest.AnonymousId = &wrappers.StringValue{Value: anonymousID}
+	handleRequest.DecisionRequest.VisitorId = &wrapperspb.StringValue{Value: loggedInID}
+	handleRequest.DecisionRequest.AnonymousId = &wrapperspb.StringValue{Value: anonymousID}
 
 	err = Decision(&handleRequest, nil)
 	assert.Nil(t, err)
@@ -176,12 +176,10 @@ func TestDecisionReconciliation(t *testing.T) {
 	anonymousID := "1234"
 	clientID := "client_id"
 	handleRequest := Request{
-		DecisionContext: &DecisionContext{
-			EnvID: clientID,
-		},
+		DecisionContext: utils.CreateMockDecisionContext(),
 		DecisionRequest: &decision_request.DecisionRequest{
-			VisitorId:  &wrappers.StringValue{Value: anonymousID},
-			TriggerHit: &wrappers.BoolValue{Value: false},
+			VisitorId:  &wrapperspb.StringValue{Value: anonymousID},
+			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
 		},
 	}
@@ -219,8 +217,8 @@ func TestDecisionReconciliation(t *testing.T) {
 
 	// Login the user
 	loggedInID := "vis_id_logged"
-	handleRequest.DecisionRequest.VisitorId = &wrappers.StringValue{Value: loggedInID}
-	handleRequest.DecisionRequest.AnonymousId = &wrappers.StringValue{Value: anonymousID}
+	handleRequest.DecisionRequest.VisitorId = &wrapperspb.StringValue{Value: loggedInID}
+	handleRequest.DecisionRequest.AnonymousId = &wrapperspb.StringValue{Value: anonymousID}
 
 	err = Decision(&handleRequest, nil)
 	assert.Nil(t, err)
@@ -230,7 +228,7 @@ func TestDecisionReconciliation(t *testing.T) {
 	assert.Equal(t, assignVariationID, handleRequest.DecisionResponse.Campaigns[0].Variation.Id.Value)
 
 	// Rehandle as if user is already logged in
-	handleRequest.DecisionRequest.VisitorId = &wrappers.StringValue{Value: loggedInID}
+	handleRequest.DecisionRequest.VisitorId = &wrapperspb.StringValue{Value: loggedInID}
 	handleRequest.DecisionRequest.AnonymousId = nil
 
 	err = Decision(&handleRequest, nil)

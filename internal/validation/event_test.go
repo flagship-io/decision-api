@@ -3,10 +3,10 @@ package validation
 import (
 	"testing"
 
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"gitlab.com/canarybay/protobuf/ptypes.git/event_request"
+	"github.com/flagship-io/flagship-proto/event_request"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +20,7 @@ func TestBuildEventErrorResponse(t *testing.T) {
 
 func TestCheckEventErrorBody(t *testing.T) {
 	resp := CheckEventErrorBody(&event_request.EventRequest{
-		VisitorId: &wrappers.StringValue{Value: ""},
+		VisitorId: &wrapperspb.StringValue{Value: ""},
 		Type:      event_request.EventRequest_NULL,
 	})
 
@@ -29,7 +29,7 @@ func TestCheckEventErrorBody(t *testing.T) {
 	assert.Equal(t, "Field is mandatory.", resp.Errors["type"])
 
 	resp = CheckEventErrorBody(&event_request.EventRequest{
-		VisitorId: &wrappers.StringValue{Value: "env_id"},
+		VisitorId: &wrapperspb.StringValue{Value: "env_id"},
 		Type:      event_request.EventRequest_CONTEXT,
 		Data:      map[string]*structpb.Value{},
 	})

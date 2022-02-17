@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // ClientErrorMessage represents a bad request response
@@ -54,17 +54,16 @@ func WriteNoContent(w http.ResponseWriter) {
 }
 
 // WritePanicResponse writes a response for panic mode
-func WritePanicResponse(w http.ResponseWriter, visitorID *wrappers.StringValue) {
-	ma := jsonpb.Marshaler{EmitDefaults: true}
-
+func WritePanicResponse(w http.ResponseWriter, visitorID *wrapperspb.StringValue) {
 	decisionResponse := decision_response.DecisionResponsePanic{}
 	decisionResponse.Campaigns = []*decision_response.Campaign{}
 	decisionResponse.VisitorId = visitorID
 	decisionResponse.Panic = true
 
-	err := ma.Marshal(w, &decisionResponse)
-
+	data, err := protojson.Marshal(&decisionResponse)
 	if err != nil {
 		WriteServerError(w, err)
+		return
 	}
+	w.Write(data)
 }

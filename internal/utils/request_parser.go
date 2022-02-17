@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
-	"gitlab.com/canarybay/protobuf/ptypes.git/decision_request"
+	"github.com/flagship-io/flagship-proto/decision_request"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const apiKeyURLParam = "token"
@@ -41,9 +40,9 @@ func unmarshalHit(r *http.Request) (*decision_request.DecisionRequest, error) {
 	return nil, errors.New("the hit is not formatted correctly")
 }
 
-func parseJSONBody(reader io.Reader) (*decision_request.DecisionRequest, error) {
+func parseJSONBody(data []byte) (*decision_request.DecisionRequest, error) {
 	decisionRequest := &decision_request.DecisionRequest{}
-	if err := jsonpb.Unmarshal(reader, decisionRequest); err != nil {
+	if err := protojson.Unmarshal(data, decisionRequest); err != nil {
 		switch err.(type) {
 		case *json.UnmarshalTypeError:
 			return nil, fmt.Errorf("syntax error in body json request. Field type incorrect : %s", err.Error())
@@ -64,7 +63,7 @@ func unmarshalGet(r *http.Request) (*decision_request.DecisionRequest, error) {
 
 	// Do not parse token query string
 	cleanedQv := map[string]string{}
-	for k, _ := range r.URL.Query() {
+	for k := range r.URL.Query() {
 		if k != GetAPIKeyURLParam() {
 			cleanedQv[k] = r.URL.Query().Get(k)
 		}
@@ -72,9 +71,13 @@ func unmarshalGet(r *http.Request) (*decision_request.DecisionRequest, error) {
 
 	j, _ := json.Marshal(formatQuery(cleanedQv))
 
-	return parseJSONBody(bytes.NewReader(j))
+	return parseJSONBody(j)
 }
 
 func unmarshalPost(r *http.Request) (*decision_request.DecisionRequest, error) {
-	return parseJSONBody(r.Body)
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return parseJSONBody(data)
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/bucketing"
-	bucketingProto "github.com/flagship-io/flagship-proto/bucketing"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -123,7 +122,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 		return err
 	}
 
-	conf := &bucketingProto.Bucketing_BucketingResponse{}
+	conf := &bucketing.Bucketing_BucketingResponse{}
 	err = (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(response, conf)
 
 	if err != nil {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -9,18 +10,25 @@ import (
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
-	"github.com/golang/protobuf/jsonpb"
-	"gitlab.com/canarybay/protobuf/ptypes.git/event_request"
+	"github.com/flagship-io/flagship-proto/event_request"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func Events(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		now := time.Now()
 		eventRequest := &event_request.EventRequest{}
-		if err := jsonpb.Unmarshal(req.Body, eventRequest); err != nil {
+		data, err := io.ReadAll(req.Body)
+		if err != nil {
 			utils.WriteServerError(w, err)
 			return
 		}
+
+		if err := protojson.Unmarshal(data, eventRequest); err != nil {
+			utils.WriteServerError(w, err)
+			return
+		}
+
 		if bodyErr := validation.CheckEventErrorBody(eventRequest); bodyErr != nil {
 			data, _ := json.Marshal(bodyErr)
 			utils.WriteClientError(w, http.StatusBadRequest, string(data))
@@ -33,7 +41,7 @@ func Events(context *connectors.DecisionContext) func(http.ResponseWriter, *http
 			for k, v := range eventRequest.Data {
 				contextMap[k] = v.AsInterface()
 			}
-			err := context.HitProcessor.TrackHits(
+			err := context.HitsProcessor.TrackHits(
 				connectors.TrackingHits{
 					VisitorContext: []*models.VisitorContext{
 						{

@@ -11,8 +11,8 @@ import (
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 
+	"github.com/flagship-io/flagship-proto/decision_request"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"gitlab.com/canarybay/protobuf/ptypes.git/decision_request"
 )
 
 // Request represents the infos of the requests needed for the decision API
@@ -99,7 +99,7 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 						Timestamp:   handleRequest.Time.UnixNano() / 1000000,
 					})
 				}
-				return handleRequest.DecisionContext.HitProcessor.TrackHits(connectors.TrackingHits{
+				return handleRequest.DecisionContext.HitsProcessor.TrackHits(connectors.TrackingHits{
 					CampaignActivations: cActivations,
 				})
 			},

@@ -1,6 +1,10 @@
 package utils
 
 import (
+	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
+	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
+	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/flagship-io/flagship-proto/targeting"
@@ -75,6 +79,39 @@ func CreateABCampaignMock(campaignID string, vgID string, targetings *targeting.
 				},
 				Targetings: targetings,
 				Variations: variationsArray,
+			},
+		},
+		BucketRanges: [][]float64{{0, 100}},
+	}
+}
+
+func CreateMockDecisionContext() *connectors.DecisionContext {
+	modifications := CreateModification("testString", "string", decision_response.ModificationsType_FLAG)
+	modifications.Value.Fields["testBool"], _ = structpb.NewValue(true)
+	modifications.Value.Fields["testNumber"], _ = structpb.NewValue(11.)
+	modifications.Value.Fields["testWhatever"], _ = structpb.NewValue([]interface{}{"a", 1.})
+
+	return &connectors.DecisionContext{
+		EnvID:  "env_id_1",
+		APIKey: "api_key_id",
+		Connectors: connectors.Connectors{
+			HitsProcessor:      &hits_processors.EmptyTracker{},
+			AssignmentsManager: &assignments_managers.InMemory{},
+			EnvironmentLoader: &environment_loaders.MockLoader{
+				MockedEnvironment: &common.Environment{
+					Campaigns: []*common.Campaign{
+						CreateABCampaignMock(
+							"campaign_1",
+							"vg_2",
+							CreateAllUsersTargetingMock(),
+							modifications),
+						CreateABCampaignMock(
+							"image",
+							"vg_1",
+							CreateAllUsersTargetingMock(),
+							CreateModification("image", "http://image.jpeg", decision_response.ModificationsType_IMAGE)),
+					},
+				},
 			},
 		},
 	}

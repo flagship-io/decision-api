@@ -3,8 +3,8 @@ package validation
 import (
 	"testing"
 
+	"github.com/flagship-io/flagship-proto/activate_request"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/canarybay/protobuf/ptypes.git/activate_request"
 )
 
 func TestBuildErrorResponse(t *testing.T) {

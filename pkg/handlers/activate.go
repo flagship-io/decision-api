@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -9,14 +10,20 @@ import (
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
-	"github.com/golang/protobuf/jsonpb"
-	"gitlab.com/canarybay/protobuf/ptypes.git/activate_request"
+	"github.com/flagship-io/flagship-proto/activate_request"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		activateRequest := &activate_request.ActivateRequest{}
-		if err := jsonpb.Unmarshal(req.Body, activateRequest); err != nil {
+		data, err := io.ReadAll(req.Body)
+		if err != nil {
+			utils.WriteServerError(w, err)
+			return
+		}
+
+		if err := protojson.Unmarshal(data, activateRequest); err != nil {
 			utils.WriteClientError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -35,7 +42,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
-		context.HitProcessor.TrackHits(
+		context.HitsProcessor.TrackHits(
 			connectors.TrackingHits{
 				CampaignActivations: []*models.CampaignActivation{
 					&models.CampaignActivation{

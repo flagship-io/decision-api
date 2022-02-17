@@ -9,13 +9,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestCampaignAssignment(t *testing.T) {
-	url, _ := url.Parse("/campaigns/campaign_1?sendContextEvent=false")
+	url, _ := url.Parse("/v2/campaigns/campaign_1?sendContextEvent=false")
 	body := `{"visitor_id": "1234", "context": {}, "trigger_hit": false }`
 	w := httptest.NewRecorder()
 
@@ -25,15 +26,17 @@ func TestCampaignAssignment(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaign(&DecisionContext{
-		EnvID:  "env_id_1",
-		APIKey: "api_key_id",
-	})(w, req)
+	Campaign(utils.CreateMockDecisionContext())(w, req)
 
 	resp := w.Result()
 
 	campaign := decision_response.Campaign{}
-	err := jsonpb.Unmarshal(resp.Body, &campaign)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = protojson.Unmarshal(data, &campaign)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -44,15 +47,14 @@ func TestCampaignAssignment(t *testing.T) {
 	}
 
 	body = `{"visitor_id": "1234", "context": {}, "trigger_hit": false, "format_response": true }`
-	url, _ = url.Parse("/campaigns/image?sendContextEvent=false&format_response=true")
+	url, _ = url.Parse("/v2/campaigns/image?sendContextEvent=false&format_response=true")
+	req.URL = url
 	req.Body = io.NopCloser(strings.NewReader(body))
+	w = httptest.NewRecorder()
 
-	Campaign(&DecisionContext{
-		EnvID:  "env_id_1",
-		APIKey: "api_key_id",
-	})(w, req)
+	Campaign(utils.CreateMockDecisionContext())(w, req)
 
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
-	assert.Equal(t, "image", resp.Header["Content-Type"])
+	assert.Equal(t, "image", resp.Header.Get("Content-Type"))
 }

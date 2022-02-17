@@ -1,4 +1,4 @@
-package experience_trackers
+package hits_processors
 
 import (
 	"bytes"

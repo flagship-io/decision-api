@@ -1,6 +1,6 @@
 package validation
 
-import "gitlab.com/canarybay/protobuf/ptypes.git/event_request"
+import "github.com/flagship-io/flagship-proto/event_request"
 
 type EventErrorResponse struct {
 	Status string            `json:"status"`

@@ -3,16 +3,16 @@ package handle
 import (
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func buildCampaignResponse(vg *common.VariationGroup, variation *common.Variation, shouldFillKeys bool) *decision_response.Campaign {
 	campaignResponse := decision_response.Campaign{
-		Id: &wrappers.StringValue{
+		Id: &wrapperspb.StringValue{
 			Value: vg.Campaign.ID,
 		},
-		VariationGroupId: &wrappers.StringValue{
+		VariationGroupId: &wrapperspb.StringValue{
 			Value: vg.ID,
 		},
 	}
@@ -39,7 +39,7 @@ func buildCampaignResponse(vg *common.VariationGroup, variation *common.Variatio
 	}
 
 	protoModif := &decision_response.Variation{
-		Id: &wrappers.StringValue{
+		Id: &wrapperspb.StringValue{
 			Value: variation.ID,
 		},
 		Modifications: variation.Modifications,

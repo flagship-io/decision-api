@@ -16,7 +16,7 @@ func NewFromFilename(name string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(name)
 
-	v.SetDefault("port", ServerPort)
+	v.SetDefault("address", ServerAddress)
 	v.SetDefault("log_level", LoggerLevel)
 	v.SetDefault("polling_interval", CDNLoaderPollingInterval)
 

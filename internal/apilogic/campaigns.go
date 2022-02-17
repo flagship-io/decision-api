@@ -40,7 +40,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	if handleRequest.CampaignID != "" {
 		filteredCampaigns := []*common.Campaign{}
 		for _, v := range handleRequest.Environment.Campaigns {
-			if v.ID == handleRequest.CampaignID {
+			if v.ID == handleRequest.CampaignID || (v.Slug != nil && *v.Slug == handleRequest.CampaignID) {
 				filteredCampaigns = append(filteredCampaigns, v)
 				break
 			}

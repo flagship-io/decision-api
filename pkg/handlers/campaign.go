@@ -9,9 +9,8 @@ import (
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	protoStruct "github.com/golang/protobuf/ptypes/struct"
-
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func Campaign(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
@@ -40,14 +39,12 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 }
 
 func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign) {
-	ma := jsonpb.Marshaler{EmitDefaults: true}
-
-	err := ma.Marshal(w, campaignDecisionResponse)
-
+	data, err := protojson.Marshal(campaignDecisionResponse)
 	if err != nil {
 		utils.WriteServerError(w, err)
 		return
 	}
+	w.Write(data)
 }
 
 func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign) {
@@ -65,7 +62,7 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 	}
 
 	fields := campaignDecisionResponse.GetVariation().GetModifications().GetValue().GetFields()
-	var value *protoStruct.Value
+	var value *structpb.Value
 	for _, v := range fields {
 		value = v
 	}
@@ -77,16 +74,15 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 
 	dataValue := ""
 	switch value.Kind.(type) {
-	case (*protoStruct.Value_StringValue):
+	case (*structpb.Value_StringValue):
 		dataValue = value.GetStringValue()
-	case (*protoStruct.Value_BoolValue):
+	case (*structpb.Value_BoolValue):
 		dataValue = strconv.FormatBool(value.GetBoolValue())
-	case (*protoStruct.Value_NumberValue):
+	case (*structpb.Value_NumberValue):
 		dataValue = strconv.FormatFloat(value.GetNumberValue(), 'E', -1, 64)
 	}
 
+	w.Header().Add("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(dataValue))
-	w.Header().Add("Content-Type", contentType)
-	w.Header().Add("Access-Control-Allow-Origin", "*")
 }

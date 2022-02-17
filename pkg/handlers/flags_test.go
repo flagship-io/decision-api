@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,10 +24,7 @@ func TestFlagsAssignment(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaigns(&DecisionContext{
-		EnvID:  "env_id_1",
-		APIKey: "api_key_id",
-	})(w, req)
+	Flags(utils.CreateMockDecisionContext())(w, req)
 
 	resp := w.Result()
 

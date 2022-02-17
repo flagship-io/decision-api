@@ -16,7 +16,7 @@ type DecisionContext struct {
 }
 
 type Connectors struct {
-	HitProcessor       HitProcessor
+	HitsProcessor      HitsProcessor
 	EnvironmentLoader  EnvironmentLoader
 	AssignmentsManager AssignmentsManager
 }
@@ -26,7 +26,7 @@ type TrackingHits struct {
 	VisitorContext      []*models.VisitorContext
 }
 
-type HitProcessor interface {
+type HitsProcessor interface {
 	TrackHits(hits TrackingHits) error
 }
 

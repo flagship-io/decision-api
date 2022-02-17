@@ -9,8 +9,8 @@ import (
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"github.com/golang/protobuf/jsonpb"
-	"gitlab.com/canarybay/protobuf/ptypes.git/flags"
+	"github.com/flagship-io/flagship-proto/flags"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // FlagMetadata represents the metadata informations about a flag key
@@ -47,8 +47,6 @@ func requestFlagsHandler(w http.ResponseWriter, handleRequest *handle.Request, e
 }
 
 func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_response.DecisionResponse) {
-	ma := jsonpb.Marshaler{EmitDefaults: true}
-
 	flagInfos := flags.FlagInfos{
 		Flags: make(map[string]*flags.FlagInfo),
 	}
@@ -73,14 +71,14 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 	}
 
 	flagInfosJSON := FlagInfos{}
-	flagString, err := ma.MarshalToString(&flagInfos)
+	flagData, err := protojson.Marshal(&flagInfos)
 
 	if err != nil {
 		utils.WriteServerError(w, err)
 		return
 	}
 
-	err = json.Unmarshal([]byte(flagString), &flagInfosJSON)
+	err = json.Unmarshal(flagData, &flagInfosJSON)
 	if err != nil {
 		utils.WriteServerError(w, err)
 		return

@@ -3,8 +3,8 @@ package config
 import "time"
 
 const (
-	ServerPort  = 8080
-	LoggerLevel = "warning"
+	ServerAddress = ":8080"
+	LoggerLevel   = "warning"
 
 	CDNLoaderPollingInterval = time.Minute * 1
 

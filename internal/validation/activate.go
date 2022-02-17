@@ -1,7 +1,7 @@
 package validation
 
 import (
-	"gitlab.com/canarybay/protobuf/ptypes.git/activate_request"
+	"github.com/flagship-io/flagship-proto/activate_request"
 )
 
 type ErrorResponse struct {

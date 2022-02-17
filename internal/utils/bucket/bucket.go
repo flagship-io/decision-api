@@ -39,8 +39,8 @@ func DecodeBucketRangeString(bucketString string) [][]float64 {
 		if len(bucketOffset) != 2 {
 			continue
 		}
-		start, _ := strconv.ParseFloat(bucketOffset[0], 8)
-		end, _ := strconv.ParseFloat(bucketOffset[1], 8)
+		start, _ := strconv.ParseFloat(bucketOffset[0], 64)
+		end, _ := strconv.ParseFloat(bucketOffset[1], 64)
 		ret = append(ret, []float64{start, end})
 	}
 	// if no range, return default range

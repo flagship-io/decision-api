@@ -48,16 +48,12 @@ func LoadPropTypes(obj interface{}) {
 		switch {
 		case strings.Contains(t, "map"):
 			proptypes[n] = resolveMapType(t)
-			break
 		case strings.Contains(t, "int"):
 			proptypes[n] = "int"
-			break
 		case strings.Contains(t, "bool"):
 			proptypes[n] = "bool"
-			break
 		case strings.Contains(t, "float"):
 			proptypes[n] = "float"
-			break
 		}
 	}
 }
