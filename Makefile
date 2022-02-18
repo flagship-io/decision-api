@@ -7,7 +7,7 @@ test:
 	go tool cover -func=coverage/cover.out
 
 run:
-	go run *.go ${ARGS}
+	go run cmd/server/*.go ${ARGS}
 
 build:
 	env go build -ldflags="-s -w" -o bin/server cmd/server/*.go
