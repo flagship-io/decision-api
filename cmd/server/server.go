@@ -4,8 +4,6 @@ import (
 	"flag"
 	"log"
 
-	"github.com/flagship-io/decision-api/pkg/connectors"
-	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/server"
@@ -25,27 +23,7 @@ func main() {
 	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
 	log := logger.New(lvl, "server")
 
-	var assignmentManager connectors.AssignmentsManager
-	err = nil
-	switch cfg.GetStringDefault("cache_type", "") {
-	case "memory":
-		assignmentManager = &assignments_managers.InMemory{}
-	case "local":
-		assignmentManager, err = assignments_managers.InitLocalCacheManager(assignments_managers.LocalOptions{
-			DbPath: cfg.GetStringDefault("cache_options_dbpath", ""),
-		})
-	case "redis":
-		assignmentManager, err = assignments_managers.InitRedisManager(assignments_managers.RedisOptions{
-			Host:     cfg.GetStringDefault("cache_options_redishost", "localhost:6379"),
-			Username: cfg.GetStringDefault("cache_options_redisusername", ""),
-			Password: cfg.GetStringDefault("cache_options_redispassword", ""),
-			Db:       cfg.GetIntDefault("cache_options_redisdb", 0),
-			Logger:   log,
-		})
-	default:
-		assignmentManager = &assignments_managers.Empty{}
-	}
-
+	assignmentManager, err := getAssignmentsManager(cfg, log)
 	if err != nil {
 		log.Fatalf("error occured when initializing assignment cache manager: %v", err)
 	}

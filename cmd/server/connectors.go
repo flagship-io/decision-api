@@ -1,0 +1,31 @@
+package main
+
+import (
+	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
+	"github.com/flagship-io/decision-api/pkg/utils/config"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
+)
+
+func getAssignmentsManager(cfg *config.Config, log *logger.Logger) (assignmentsManager connectors.AssignmentsManager, err error) {
+	switch cfg.GetStringDefault("cache_type", "") {
+	case "memory":
+		assignmentsManager = &assignments_managers.InMemory{}
+	case "local":
+		assignmentsManager, err = assignments_managers.InitLocalCacheManager(assignments_managers.LocalOptions{
+			DbPath: cfg.GetStringDefault("cache_options_dbpath", ""),
+		})
+	case "redis":
+		assignmentsManager, err = assignments_managers.InitRedisManager(assignments_managers.RedisOptions{
+			Host:     cfg.GetStringDefault("cache_options_redishost", "localhost:6379"),
+			Username: cfg.GetStringDefault("cache_options_redisusername", ""),
+			Password: cfg.GetStringDefault("cache_options_redispassword", ""),
+			Db:       cfg.GetIntDefault("cache_options_redisdb", 0),
+			Logger:   log,
+		})
+	default:
+		assignmentsManager = &assignments_managers.Empty{}
+	}
+
+	return assignmentsManager, err
+}

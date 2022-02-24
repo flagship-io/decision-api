@@ -83,8 +83,7 @@ func (loader *CDNLoader) Init(envID string, APIKey string) error {
 
 	go func() {
 		// When receiving sigterm signal, send an event to the done channel
-		sig := <-sigs
-		fmt.Println(sig)
+		<-sigs
 		done <- true
 	}()
 

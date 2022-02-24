@@ -5,15 +5,12 @@ go 1.17
 require (
 	github.com/flagship-io/flagship-common v0.0.17-beta.0
 	github.com/flagship-io/flagship-proto v0.0.13
+	github.com/go-redis/redis/v8 v8.11.4
+	github.com/prologic/bitcask v0.3.10
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/protobuf v1.27.1
-)
-
-require (
-	github.com/go-redis/redis/v8 v8.11.4
-	github.com/prologic/bitcask v0.3.10
 )
 
 require (

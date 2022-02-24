@@ -12,7 +12,7 @@ import (
 type ServerOptions struct {
 	experienceTracker  connectors.HitsProcessor
 	environmentLoader  connectors.EnvironmentLoader
-	AssignmentsManager connectors.AssignmentsManager
+	assignmentsManager connectors.AssignmentsManager
 	logger             *logger.Logger
 }
 
@@ -32,7 +32,7 @@ func WithEnvironmentLoader(loader connectors.EnvironmentLoader) ServerOptionsBui
 
 func WithAssignmentsManager(manager connectors.AssignmentsManager) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
-		h.AssignmentsManager = manager
+		h.assignmentsManager = manager
 	}
 }
 
@@ -58,6 +58,14 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		opt(serverOptions)
 	}
 
+	if envID == "" {
+		return nil, errors.New("missing mandatory environment ID")
+	}
+
+	if apiKey == "" {
+		return nil, errors.New("missing mandatory API Key")
+	}
+
 	if serverOptions.logger == nil {
 		return nil, errors.New("missing mandatory logger")
 	}
@@ -70,7 +78,7 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		return nil, errors.New("missing mandatory experienceTracker connector")
 	}
 
-	if serverOptions.AssignmentsManager == nil {
+	if serverOptions.assignmentsManager == nil {
 		return nil, errors.New("missing mandatory visitorAssignmentLoader connector")
 	}
 
@@ -86,7 +94,7 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		Connectors: connectors.Connectors{
 			HitsProcessor:      serverOptions.experienceTracker,
 			EnvironmentLoader:  serverOptions.environmentLoader,
-			AssignmentsManager: serverOptions.AssignmentsManager,
+			AssignmentsManager: serverOptions.assignmentsManager,
 		},
 	}
 

@@ -19,6 +19,7 @@ func NewFromFilename(name string) (*Config, error) {
 	v.SetDefault("address", ServerAddress)
 	v.SetDefault("log_level", LoggerLevel)
 	v.SetDefault("polling_interval", CDNLoaderPollingInterval)
+	v.SetDefault("cache_options_redishost", AddonCacheRedisAddr)
 
 	// replace dot in key name by underscore
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

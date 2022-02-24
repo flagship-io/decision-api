@@ -3,7 +3,6 @@ package hits_processors
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -62,8 +61,7 @@ func NewDataCollectTracker(logLevel string) *DataCollectTracker {
 
 	go func() {
 		// When receiving sigterm signal, send an event to the done channel
-		sig := <-sigs
-		fmt.Println(sig)
+		<-sigs
 		done <- true
 	}()
 

@@ -34,10 +34,8 @@ func GetDecisionRequest(r *http.Request) (*decision_request.DecisionRequest, err
 func unmarshalHit(r *http.Request) (*decision_request.DecisionRequest, error) {
 	if r.Method == http.MethodPost {
 		return unmarshalPost(r)
-	} else if r.Method == http.MethodGet {
-		return unmarshalGet(r)
 	}
-	return nil, errors.New("the hit is not formatted correctly")
+	return nil, errors.New("only POST http method is allowed")
 }
 
 func parseJSONBody(data []byte) (*decision_request.DecisionRequest, error) {
@@ -54,24 +52,6 @@ func parseJSONBody(data []byte) (*decision_request.DecisionRequest, error) {
 		}
 	}
 	return decisionRequest, nil
-}
-
-func unmarshalGet(r *http.Request) (*decision_request.DecisionRequest, error) {
-	if len(r.URL.Query()) == 0 {
-		return nil, errors.New("empty http query")
-	}
-
-	// Do not parse token query string
-	cleanedQv := map[string]string{}
-	for k := range r.URL.Query() {
-		if k != GetAPIKeyURLParam() {
-			cleanedQv[k] = r.URL.Query().Get(k)
-		}
-	}
-
-	j, _ := json.Marshal(formatQuery(cleanedQv))
-
-	return parseJSONBody(j)
 }
 
 func unmarshalPost(r *http.Request) (*decision_request.DecisionRequest, error) {
