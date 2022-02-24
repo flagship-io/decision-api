@@ -1,12 +1,14 @@
 package handlers
 
 // modificationResponse represents a decision campaign variation modification
+// nolint
 type modificationResponse struct {
 	Type  string                 `json:"type"`
 	Value map[string]interface{} `json:"value"`
 }
 
 // variationResponse represents a decision campaign variation
+// nolint
 type variationResponse struct {
 	ID            string               `json:"id"`
 	Modifications modificationResponse `json:"modifications"`
@@ -14,6 +16,7 @@ type variationResponse struct {
 }
 
 // campaignResponse represents a decision campaign
+// nolint
 type campaignResponse struct {
 	ID               string            `json:"id"`
 	CustomID         string            `json:"-"`
@@ -36,6 +39,7 @@ type campaignsBodySwagger struct {
 	TriggerHit  bool                        `json:"trigger_hit"`
 }
 
+// nolint
 type campaignsBody struct {
 	VisitorID   string                 `json:"visitor_id" binding:"required"`
 	AnonymousID *string                `json:"anonymous_id"`
@@ -44,12 +48,14 @@ type campaignsBody struct {
 }
 
 // campaignsResponse represents the campaigns call response
+// nolint
 type campaignsResponse struct {
 	VisitorID string             `json:"visitor_id"`
 	Panic     bool               `json:"panic"`
 	Campaigns []campaignResponse `json:"campaigns"`
 }
 
+// nolint
 type activateBody struct {
 	VisitorID        string  `json:"vid" binding:"required"`
 	AnonymousID      *string `json:"aid"`
@@ -58,6 +64,7 @@ type activateBody struct {
 	VariationID      string  `json:"vaid" binding:"required"`
 }
 
+// nolint
 type errorMessage struct {
 	Message string `json:"message"`
 }
