@@ -19,7 +19,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ghcr.io/${{ github.repository }}s
+            ghcr.io/${{ github.repository }}
 
       - name: Login to Registry
         uses: docker/login-action@v1
