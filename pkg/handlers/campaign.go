@@ -14,6 +14,19 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// Campaign returns a campaign handler
+// @Summary Get a single campaigns for the visitor
+// @Tags Campaigns
+// @Description Get a single campaign value and metadata for a visitor ID and context
+// @ID get-campaign
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Campaign ID"
+// @Param request body campaignsBodySwagger true "Campaign request body"
+// @Success 200 {object} campaignResponse
+// @Failure 400 {object} errorMessage
+// @Failure 500 {object} errorMessage
+// @Router /campaigns/{id} [post]
 func Campaign(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestCampaignHandler, utils.NewTracker())

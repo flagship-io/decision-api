@@ -1,0 +1,376 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the Flagship Decision API documentation",
+        "title": "Flagship Decision API",
+        "contact": {
+            "name": "API Support",
+            "url": "https://www.flagship.io",
+            "email": "support@flagship.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "2.0"
+    },
+    "basePath": "/v2",
+    "paths": {
+        "/activate": {
+            "post": {
+                "description": "Activate a campaign for a visitor ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Activate a campaign",
+                "operationId": "activate",
+                "parameters": [
+                    {
+                        "description": "Campaign activation request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.activateBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns": {
+            "post": {
+                "description": "Get all campaigns value and metadata for a visitor ID and context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Get all campaigns for the visitor",
+                "operationId": "get-campaigns",
+                "parameters": [
+                    {
+                        "description": "Campaigns request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.campaignsBodySwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.campaignsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}": {
+            "post": {
+                "description": "Get a single campaign value and metadata for a visitor ID and context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Campaigns"
+                ],
+                "summary": "Get a single campaigns for the visitor",
+                "operationId": "get-campaign",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Campaign request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.campaignsBodySwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.campaignResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/flags": {
+            "post": {
+                "description": "Get all flags value and metadata for a visitor ID and context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flags"
+                ],
+                "summary": "Get all flags",
+                "operationId": "get-flags",
+                "parameters": [
+                    {
+                        "description": "Flag request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.campaignsBodySwagger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/handlers.FlagInfos"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorMessage"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.FlagInfo": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/handlers.FlagMetadata"
+                },
+                "value": {}
+            }
+        },
+        "handlers.FlagInfos": {
+            "type": "object",
+            "properties": {
+                "flags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/handlers.FlagInfo"
+                    }
+                }
+            }
+        },
+        "handlers.FlagMetadata": {
+            "type": "object",
+            "properties": {
+                "campaignId": {
+                    "type": "string"
+                },
+                "variationGroupId": {
+                    "type": "string"
+                },
+                "variationId": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.activateBody": {
+            "type": "object",
+            "required": [
+                "caid",
+                "cid",
+                "vaid",
+                "vid"
+            ],
+            "properties": {
+                "aid": {
+                    "type": "string"
+                },
+                "caid": {
+                    "type": "string"
+                },
+                "cid": {
+                    "type": "string"
+                },
+                "vaid": {
+                    "type": "string"
+                },
+                "vid": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.campaignResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "variation": {
+                    "$ref": "#/definitions/handlers.variationResponse"
+                },
+                "variationGroupId": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.campaignsBodyContextSwagger": {
+            "type": "object",
+            "properties": {
+                "key_bool": {
+                    "type": "boolean"
+                },
+                "key_number": {
+                    "type": "number"
+                },
+                "key_string": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.campaignsBodySwagger": {
+            "type": "object",
+            "required": [
+                "visitor_id"
+            ],
+            "properties": {
+                "anonymous_id": {
+                    "type": "string"
+                },
+                "context": {
+                    "$ref": "#/definitions/handlers.campaignsBodyContextSwagger"
+                },
+                "trigger_hit": {
+                    "type": "boolean"
+                },
+                "visitor_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.campaignsResponse": {
+            "type": "object",
+            "properties": {
+                "campaigns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.campaignResponse"
+                    }
+                },
+                "panic": {
+                    "type": "boolean"
+                },
+                "visitor_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.errorMessage": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.modificationResponse": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "handlers.variationResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "modifications": {
+                    "$ref": "#/definitions/handlers.modificationResponse"
+                },
+                "reference": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

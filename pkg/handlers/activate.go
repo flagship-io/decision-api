@@ -14,6 +14,18 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// Activate returns a flag activation handler
+// @Summary Activate a campaign
+// @Tags Campaigns
+// @Description Activate a campaign for a visitor ID
+// @ID activate
+// @Accept  json
+// @Produce  json
+// @Param request body activateBody true "Campaign activation request body"
+// @Success 204
+// @Failure 400 {object} errorMessage
+// @Failure 500 {object} errorMessage
+// @Router /activate [post]
 func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		activateRequest := &activate_request.ActivateRequest{}

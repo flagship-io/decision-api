@@ -4,9 +4,11 @@ import (
 	"errors"
 	"net/http"
 
+	_ "github.com/flagship-io/decision-api/docs"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/handlers"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type ServerOptions struct {
@@ -51,6 +53,17 @@ func (srv *Server) Listen(addr string) error {
 	return http.ListenAndServe(addr, srv.httpServer)
 }
 
+// @title Flagship Decision API
+// @version 2.0
+// @BasePath /v2
+// @description This is the Flagship Decision API documentation
+
+// @contact.name API Support
+// @contact.url https://www.flagship.io
+// @contact.email support@flagship.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*Server, error) {
 	serverOptions := &ServerOptions{}
 
@@ -104,8 +117,8 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 	mux.HandleFunc("/v2/campaigns/*", handlers.Campaign(context))
 	mux.HandleFunc("/v2/activate", handlers.Activate(context))
 	mux.HandleFunc("/v2/activate-batch", handlers.ActivateMultiple(context))
-	mux.HandleFunc("/v2/events", handlers.Events(context))
 	mux.HandleFunc("/v2/flags", handlers.Flags(context))
+	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
 
 	server := &Server{
 		options:    serverOptions,

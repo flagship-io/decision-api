@@ -1,0 +1,248 @@
+basePath: /v2
+definitions:
+  handlers.FlagInfo:
+    properties:
+      metadata:
+        $ref: '#/definitions/handlers.FlagMetadata'
+      value: {}
+    type: object
+  handlers.FlagInfos:
+    properties:
+      flags:
+        additionalProperties:
+          $ref: '#/definitions/handlers.FlagInfo'
+        type: object
+    type: object
+  handlers.FlagMetadata:
+    properties:
+      campaignId:
+        type: string
+      variationGroupId:
+        type: string
+      variationId:
+        type: string
+    type: object
+  handlers.activateBody:
+    properties:
+      aid:
+        type: string
+      caid:
+        type: string
+      cid:
+        type: string
+      vaid:
+        type: string
+      vid:
+        type: string
+    required:
+    - caid
+    - cid
+    - vaid
+    - vid
+    type: object
+  handlers.campaignResponse:
+    properties:
+      id:
+        type: string
+      variation:
+        $ref: '#/definitions/handlers.variationResponse'
+      variationGroupId:
+        type: string
+    type: object
+  handlers.campaignsBodyContextSwagger:
+    properties:
+      key_bool:
+        type: boolean
+      key_number:
+        type: number
+      key_string:
+        type: string
+    type: object
+  handlers.campaignsBodySwagger:
+    properties:
+      anonymous_id:
+        type: string
+      context:
+        $ref: '#/definitions/handlers.campaignsBodyContextSwagger'
+      trigger_hit:
+        type: boolean
+      visitor_id:
+        type: string
+    required:
+    - visitor_id
+    type: object
+  handlers.campaignsResponse:
+    properties:
+      campaigns:
+        items:
+          $ref: '#/definitions/handlers.campaignResponse'
+        type: array
+      panic:
+        type: boolean
+      visitor_id:
+        type: string
+    type: object
+  handlers.errorMessage:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.modificationResponse:
+    properties:
+      type:
+        type: string
+      value:
+        additionalProperties: true
+        type: object
+    type: object
+  handlers.variationResponse:
+    properties:
+      id:
+        type: string
+      modifications:
+        $ref: '#/definitions/handlers.modificationResponse'
+      reference:
+        type: boolean
+    type: object
+info:
+  contact:
+    email: support@flagship.io
+    name: API Support
+    url: https://www.flagship.io
+  description: This is the Flagship Decision API documentation
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Flagship Decision API
+  version: "2.0"
+paths:
+  /activate:
+    post:
+      consumes:
+      - application/json
+      description: Activate a campaign for a visitor ID
+      operationId: activate
+      parameters:
+      - description: Campaign activation request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.activateBody'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+      summary: Activate a campaign
+      tags:
+      - Campaigns
+  /campaigns:
+    post:
+      consumes:
+      - application/json
+      description: Get all campaigns value and metadata for a visitor ID and context
+      operationId: get-campaigns
+      parameters:
+      - description: Campaigns request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.campaignsBodySwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.campaignsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+      summary: Get all campaigns for the visitor
+      tags:
+      - Campaigns
+  /campaigns/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Get a single campaign value and metadata for a visitor ID and context
+      operationId: get-campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Campaign request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.campaignsBodySwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.campaignResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+      summary: Get a single campaigns for the visitor
+      tags:
+      - Campaigns
+  /flags:
+    post:
+      consumes:
+      - application/json
+      description: Get all flags value and metadata for a visitor ID and context
+      operationId: get-flags
+      parameters:
+      - description: Flag request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.campaignsBodySwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/handlers.FlagInfos'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+      summary: Get all flags
+      tags:
+      - Flags
+swagger: "2.0"

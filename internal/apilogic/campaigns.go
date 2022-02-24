@@ -16,11 +16,12 @@ import (
 // HandleCampaigns get campaigns from request, add checks and side effect and return response
 func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *connectors.DecisionContext, handleDecision func(http.ResponseWriter, *handle.Request, error), tracker *common.Tracker) {
 	handleRequest, err := BuildHandleRequest(req)
-	handleRequest.DecisionContext = decisionContext
 	if err != nil {
 		utils.WriteClientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	handleRequest.DecisionContext = decisionContext
 
 	// 1. Get environment info from environment ID & API Key
 	tracker.TimeTrack("start get env info from env loader")
