@@ -76,7 +76,7 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			TriggerHit:        shouldTriggerHit(handleRequest.DecisionRequest),
 			CampaignID:        handleRequest.CampaignID,
 			Tracker:           tracker,
-			IsCumulativeAlloc: true,
+			IsCumulativeAlloc: false,
 			ExposeAllKeys:     handleRequest.ExposeAllKeys,
 		}, common.DecisionHandlers{
 			GetCache: func(environmentID, id string) (*common.VisitorAssignments, error) {
