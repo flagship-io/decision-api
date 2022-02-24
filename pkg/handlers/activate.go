@@ -42,10 +42,10 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
-		context.HitsProcessor.TrackHits(
+		err = context.HitsProcessor.TrackHits(
 			connectors.TrackingHits{
 				CampaignActivations: []*models.CampaignActivation{
-					&models.CampaignActivation{
+					{
 						EnvID:       activateRequest.Cid,
 						VisitorID:   visitorID,
 						CustomerID:  activateRequest.Vid,
@@ -55,6 +55,11 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 					},
 				},
 			})
+
+		if err != nil {
+			utils.WriteServerError(w, err)
+			return
+		}
 
 		// Return a response with a 200 OK status and the campaign payload as an example
 		utils.WriteNoContent(w)

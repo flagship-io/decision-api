@@ -46,5 +46,9 @@ func main() {
 	}
 
 	log.Infof("server listening on %s", cfg.GetStringDefault("address", ":8080"))
-	server.Listen(cfg.GetStringDefault("address", ":8080"))
+	err = server.Listen(cfg.GetStringDefault("address", ":8080"))
+
+	if err != nil {
+		log.Fatalf("error when starting server: %v", err)
+	}
 }

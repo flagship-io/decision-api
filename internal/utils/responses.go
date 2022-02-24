@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/flagship-io/flagship-proto/decision_response"
@@ -19,7 +20,10 @@ func WriteServerError(w http.ResponseWriter, err error) {
 	body := &ClientErrorMessage{Message: err.Error()}
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(body)
+	jsonErr := json.NewEncoder(w).Encode(body)
+	if jsonErr != nil {
+		log.Printf("error when encoding body: %v", jsonErr)
+	}
 }
 
 // WriteClientError similarly add a helper for send responses relating to client errors.
@@ -27,13 +31,19 @@ func WriteClientError(w http.ResponseWriter, status int, message string) {
 	body := &ClientErrorMessage{Message: message}
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(body)
+	jsonErr := json.NewEncoder(w).Encode(body)
+	if jsonErr != nil {
+		log.Printf("error when encoding body: %v", jsonErr)
+	}
 }
 
 // WriteJSONStringOk similarly add a helper to send json stringified responses with status OK.
 func WriteJSONStringOk(w http.ResponseWriter, data string) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(data))
+	_, writeErr := w.Write([]byte(data))
+	if writeErr != nil {
+		log.Printf("error when writing body: %v", writeErr)
+	}
 }
 
 // WriteJSONOk similarly add a helper to send json responses with status OK.
@@ -65,5 +75,8 @@ func WritePanicResponse(w http.ResponseWriter, visitorID *wrapperspb.StringValue
 		WriteServerError(w, err)
 		return
 	}
-	w.Write(data)
+	_, writeErr := w.Write(data)
+	if writeErr != nil {
+		log.Printf("error when writing body: %v", writeErr)
+	}
 }

@@ -53,9 +53,14 @@ func ActivateMultiple(context *connectors.DecisionContext) func(http.ResponseWri
 			})
 		}
 
-		context.HitsProcessor.TrackHits(connectors.TrackingHits{
+		err = context.HitsProcessor.TrackHits(connectors.TrackingHits{
 			CampaignActivations: campaignActivations,
 		})
+
+		if err != nil {
+			utils.WriteServerError(w, err)
+			return
+		}
 
 		// Return a response with a 204 OK status and an empty payload
 		utils.WriteNoContent(w)

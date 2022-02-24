@@ -8,6 +8,7 @@ import (
 	"github.com/flagship-io/decision-api/internal/handle"
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -26,7 +27,7 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 	}
 
 	if handleRequest.DecisionRequest.GetFormatResponse() != nil && handleRequest.DecisionRequest.GetFormatResponse().GetValue() {
-		sendSingleFormatResponse(w, handleRequest.DecisionResponse.Campaigns[0])
+		sendSingleFormatResponse(w, handleRequest.DecisionResponse.Campaigns[0], handleRequest.Logger)
 		return
 	}
 
@@ -35,20 +36,24 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 		return
 	}
 
-	sendSingleResponse(w, handleRequest.DecisionResponse.Campaigns[0])
+	sendSingleResponse(w, handleRequest.DecisionResponse.Campaigns[0], handleRequest.Logger)
 }
 
-func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign) {
+func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign, logger *logger.Logger) {
 	data, err := protojson.Marshal(campaignDecisionResponse)
 	if err != nil {
 		utils.WriteServerError(w, err)
 		return
 	}
-	w.Write(data)
+	_, err = w.Write(data)
+
+	if err != nil {
+		logger.Errorf("error when writing data: %v", err)
+	}
 }
 
-func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign) {
-	contentType := "application/json"
+func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign, logger *logger.Logger) {
+	var contentType string
 	switch campaignDecisionResponse.GetVariation().GetModifications().GetType() {
 	case decision_response.ModificationsType_IMAGE:
 		contentType = "image"
@@ -57,7 +62,7 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 	case decision_response.ModificationsType_HTML:
 		contentType = "text/html"
 	default:
-		sendSingleResponse(w, campaignDecisionResponse)
+		sendSingleResponse(w, campaignDecisionResponse, logger)
 		return
 	}
 
@@ -68,7 +73,7 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 	}
 
 	if value == nil {
-		sendSingleResponse(w, campaignDecisionResponse)
+		sendSingleResponse(w, campaignDecisionResponse, logger)
 		return
 	}
 
@@ -84,5 +89,9 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 
 	w.Header().Add("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(dataValue))
+
+	_, err := w.Write([]byte(dataValue))
+	if err != nil {
+		logger.Errorf("error when writing data: %v", err)
+	}
 }

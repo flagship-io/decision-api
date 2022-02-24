@@ -76,7 +76,10 @@ func (loader *CDNLoader) Init(envID string, APIKey string) error {
 			case <-done:
 				os.Exit(0)
 			case <-ticker.C:
-				loader.fetchEnvironment(envID, APIKey)
+				err := loader.fetchEnvironment(envID, APIKey)
+				if err != nil {
+					loader.logger.Errorf("error when fetching environment: %v", err)
+				}
 			}
 		}
 	}()

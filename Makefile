@@ -10,4 +10,4 @@ run:
 	go run cmd/server/*.go ${ARGS}
 
 build:
-	env go build -ldflags="-s -w" -o bin/server cmd/server/*.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/server cmd/server/*.go
