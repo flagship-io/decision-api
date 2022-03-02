@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis
+
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ENV_ID: env_id
+      API_KEY: api_key
+      LOG_LEVEL: debug
+      CACHE_TYPE: redis
+      CACHE_OPTIONS_REDISHOST: "redis:6379"
+    depends_on:
+      - redis

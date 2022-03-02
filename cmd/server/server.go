@@ -23,7 +23,8 @@ func main() {
 	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
 	log := logger.New(lvl, "server")
 
-	assignmentManager, err := getAssignmentsManager(cfg, log)
+	log.Infof("creating assignment cache manager from configuration")
+	assignmentManager, err := getAssignmentsManager(cfg)
 	if err != nil {
 		log.Fatalf("error occured when initializing assignment cache manager: %v", err)
 	}

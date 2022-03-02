@@ -8,11 +8,6 @@ import (
 
 // SendVisitorContext sends a pubsub event to handle visitor context
 func SendVisitorContext(handleRequest *handle.Request) {
-	// If sendContext explicitely set to !true or context is empty, return
-	if !handleRequest.SendContextEvent || len(handleRequest.DecisionRequest.Context) == 0 {
-		return
-	}
-
 	contextMap := map[string]interface{}{}
 	for k, v := range handleRequest.DecisionRequest.Context {
 		contextMap[k] = v.AsInterface()

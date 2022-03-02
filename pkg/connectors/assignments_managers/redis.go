@@ -26,14 +26,15 @@ type RedisOptions struct {
 	Password  string
 	TLSConfig *tls.Config
 	Db        int
-	Logger    *logger.Logger
+	LogLevel  string
 }
 
 var rdb *redis.Client
 var ctx = context.Background()
 
 func InitRedisManager(options RedisOptions) (*RedisManager, error) {
-	options.Logger.Info("Connecting to server...")
+	logger := logger.New(options.LogLevel, "redis")
+	logger.Info("Connecting to server...")
 	rdb = redis.NewClient(&redis.Options{
 		Addr:      options.Host,
 		Username:  options.Username,
@@ -44,12 +45,15 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 	_, err := rdb.Ping(ctx).Result()
 
 	if err != nil {
+		logger.Errorf("Error when connecting to redis server: %v", err)
 		return nil, err
 	}
 
+	logger.Info("Succesfully connected to redis server")
+
 	return &RedisManager{
 		client: rdb,
-		logger: options.Logger,
+		logger: logger,
 	}, nil
 }
 
@@ -67,7 +71,7 @@ func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssig
 		return err
 	}
 
-	m.logger.Info("Setting visitor cache")
+	m.logger.Info("Setting visitor cache for ID %s", visitorID)
 	cmd := m.client.Set(ctx, visitorID, string(data), 0)
 	_, err = cmd.Result()
 
@@ -80,11 +84,14 @@ func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.
 		return nil, errors.New("redis cache manager not initialized")
 	}
 
-	m.logger.Info("Getting visitor cache")
+	m.logger.Infof("Getting visitor cache for ID %s", visitorID)
 	cmd := m.client.Get(ctx, visitorID)
 	data, err := cmd.Bytes()
 
 	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
 		return nil, err
 	}
 

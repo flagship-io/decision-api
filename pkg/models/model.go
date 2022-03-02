@@ -30,6 +30,7 @@ func (c *CampaignActivation) ToMap() map[string]interface{} {
 		"caid": c.CampaignID,
 		"vaid": c.VariationID,
 		"qt":   c.QueueTime,
+		"t":    "CAMPAIGN",
 	}
 
 	if c.CustomerID != "" {
@@ -58,6 +59,7 @@ func (c *VisitorContext) ToMap() map[string]interface{} {
 		"vid": c.VisitorID,
 		"s":   c.Context,
 		"qt":  c.QueueTime,
+		"t":   "SEGMENT",
 	}
 
 	if c.CustomerID != "" {

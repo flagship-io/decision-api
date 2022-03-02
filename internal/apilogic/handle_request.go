@@ -28,9 +28,7 @@ func BuildHandleRequest(req *http.Request) (*handle.Request, error) {
 	}
 
 	sendContextEvent := req.URL.Query().Get("sendContextEvent")
-	if sendContextEvent != "" {
-		handleRequest.SendContextEvent = exposeAllKeys != "false"
-	}
+	handleRequest.SendContextEvent = sendContextEvent != "false"
 
 	handleRequest.DecisionRequest = decisionRequest
 	handleRequest.Extras = req.URL.Query()["extras"]

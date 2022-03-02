@@ -117,6 +117,9 @@ func (d *DataCollectTracker) TrackHits(hits connectors.TrackingHits) error {
 	for _, ca := range hits.CampaignActivations {
 		mappableHits = append(mappableHits, ca)
 	}
+	for _, vc := range hits.VisitorContext {
+		mappableHits = append(mappableHits, vc)
+	}
 	d.hits = append(d.hits, mappableHits...)
 	if len(d.hits) >= d.batchSize {
 		d.ticker.Reset(d.batchingWindow)

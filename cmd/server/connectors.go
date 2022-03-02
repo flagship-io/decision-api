@@ -4,10 +4,9 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
-func getAssignmentsManager(cfg *config.Config, log *logger.Logger) (assignmentsManager connectors.AssignmentsManager, err error) {
+func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.AssignmentsManager, err error) {
 	switch cfg.GetStringDefault("cache_type", "") {
 	case "memory":
 		assignmentsManager = &assignments_managers.InMemory{}
@@ -21,7 +20,7 @@ func getAssignmentsManager(cfg *config.Config, log *logger.Logger) (assignmentsM
 			Username: cfg.GetStringDefault("cache_options_redisusername", ""),
 			Password: cfg.GetStringDefault("cache_options_redispassword", ""),
 			Db:       cfg.GetIntDefault("cache_options_redisdb", 0),
-			Logger:   log,
+			LogLevel: config.LoggerLevel,
 		})
 	default:
 		assignmentsManager = &assignments_managers.Empty{}
