@@ -35,7 +35,18 @@ type EnvironmentLoader interface {
 	LoadEnvironment(envID string, APIKey string) (*common.Environment, error)
 }
 
+type CacheLevel int64
+
+const (
+	Decision   CacheLevel = 0
+	Activation CacheLevel = 1
+)
+
+type SaveAssignmentsContext struct {
+	CacheLevel CacheLevel
+}
+
 type AssignmentsManager interface {
 	LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error)
-	SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error
+	SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context SaveAssignmentsContext) error
 }

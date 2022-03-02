@@ -10,6 +10,7 @@ import (
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
+	decision "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/activate_request"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -54,23 +55,43 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
-		err = context.HitsProcessor.TrackHits(
-			connectors.TrackingHits{
-				CampaignActivations: []*models.CampaignActivation{
-					{
-						EnvID:       activateRequest.Cid,
-						VisitorID:   visitorID,
-						CustomerID:  activateRequest.Vid,
-						CampaignID:  activateRequest.Caid,
-						VariationID: activateRequest.Vaid,
-						Timestamp:   now.UnixNano() / 1000000,
-					},
-				},
-			})
+		assignments := map[string]*decision.VisitorCache{
+			activateRequest.Cid: {
+				VariationID: activateRequest.Vaid,
+				Activated:   true,
+			},
+		}
 
-		if err != nil {
-			utils.WriteServerError(w, err)
-			return
+		errors := make(chan error, 2)
+		go func(errors chan error) {
+			errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, visitorID, assignments, now, connectors.SaveAssignmentsContext{
+				CacheLevel: connectors.Activation,
+			})
+		}(errors)
+
+		go func(errors chan error) {
+			errors <- context.HitsProcessor.TrackHits(
+				connectors.TrackingHits{
+					CampaignActivations: []*models.CampaignActivation{
+						{
+							EnvID:       activateRequest.Cid,
+							VisitorID:   visitorID,
+							CustomerID:  activateRequest.Vid,
+							CampaignID:  activateRequest.Caid,
+							VariationID: activateRequest.Vaid,
+							Timestamp:   now.UnixNano() / 1000000,
+						},
+					},
+				})
+		}(errors)
+
+		close(errors)
+
+		for err := range errors {
+			if err != nil {
+				utils.WriteServerError(w, err)
+				return
+			}
 		}
 
 		// Return a response with a 200 OK status and the campaign payload as an example

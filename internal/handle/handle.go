@@ -73,17 +73,18 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 		},
 		*handleRequest.Environment,
 		common.DecisionOptions{
-			TriggerHit:        shouldTriggerHit(handleRequest.DecisionRequest),
-			CampaignID:        handleRequest.CampaignID,
-			Tracker:           tracker,
-			IsCumulativeAlloc: false,
-			ExposeAllKeys:     handleRequest.ExposeAllKeys,
+			TriggerHit:    shouldTriggerHit(handleRequest.DecisionRequest),
+			CampaignID:    handleRequest.CampaignID,
+			Tracker:       tracker,
+			ExposeAllKeys: handleRequest.ExposeAllKeys,
 		}, common.DecisionHandlers{
 			GetCache: func(environmentID, id string) (*common.VisitorAssignments, error) {
 				return handleRequest.DecisionContext.AssignmentsManager.LoadAssignments(environmentID, id)
 			},
 			SaveCache: func(environmentID, id string, assignment *common.VisitorAssignments) error {
-				return handleRequest.DecisionContext.AssignmentsManager.SaveAssignments(environmentID, id, assignment.Assignments, handleRequest.Time)
+				return handleRequest.DecisionContext.AssignmentsManager.SaveAssignments(environmentID, id, assignment.Assignments, handleRequest.Time, connectors.SaveAssignmentsContext{
+					CacheLevel: connectors.Decision,
+				})
 			},
 			ActivateCampaigns: func(activations []*common.VisitorActivation) error {
 				// Initialize future campaign activations

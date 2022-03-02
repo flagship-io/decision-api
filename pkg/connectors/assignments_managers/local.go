@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/prologic/bitcask"
 )
@@ -39,7 +40,7 @@ func InitLocalCacheManager(localOptions LocalOptions) (m *LocalCacheManager, err
 }
 
 // Set saves the campaigns in cache for this visitor
-func (m *LocalCacheManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+func (m *LocalCacheManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	if m.db == nil {
 		return errors.New("local cache manager not initialized")
 	}

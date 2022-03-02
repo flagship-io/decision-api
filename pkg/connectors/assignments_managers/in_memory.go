@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	common "github.com/flagship-io/flagship-common"
 )
 
@@ -20,7 +21,7 @@ func (*InMemory) LoadAssignments(envID string, visitorID string) (*common.Visito
 	return assignments, nil
 }
 
-func (*InMemory) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+func (*InMemory) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	lock.Lock()
 	cache[envID+separator+visitorID] = &common.VisitorAssignments{
 		Timestamp:   date.UnixMilli(),

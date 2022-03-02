@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/go-redis/redis/v8"
@@ -53,7 +54,7 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 }
 
 // SaveAssignments saves the assignments in cache for this visitor
-func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	if m.client == nil {
 		return errors.New("redis cache manager not initialized")
 	}
