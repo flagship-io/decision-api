@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -55,39 +56,58 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
+		existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateRequest.Cid, activateRequest.Vid)
+		if err != nil {
+			log.Printf("Error when reading existing assignments : %v", err)
+		}
+
+		var vgAssign *decision.VisitorCache
+		if existingAssignments != nil {
+			vgAssign = existingAssignments.Assignments[activateRequest.Caid]
+		}
+
 		assignments := map[string]*decision.VisitorCache{
-			activateRequest.Cid: {
+			activateRequest.Caid: {
 				VariationID: activateRequest.Vaid,
 				Activated:   true,
 			},
 		}
 
-		errors := make(chan error, 2)
-		go func(errors chan error) {
-			errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, visitorID, assignments, now, connectors.SaveAssignmentsContext{
-				CacheLevel: connectors.Activation,
-			})
-		}(errors)
+		persistAssignment := vgAssign == nil || !vgAssign.Activated || vgAssign.VariationID != activateRequest.Vaid
+		chanLength := 1
+		if persistAssignment {
+			chanLength = 2
+		}
+
+		errors := make(chan error, chanLength)
+
+		if persistAssignment {
+			go func(errors chan error) {
+				errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateRequest.Vid, assignments, now, connectors.SaveAssignmentsContext{
+					CacheLevel: connectors.Activation,
+				})
+			}(errors)
+		}
 
 		go func(errors chan error) {
 			errors <- context.HitsProcessor.TrackHits(
 				connectors.TrackingHits{
 					CampaignActivations: []*models.CampaignActivation{
 						{
-							EnvID:       activateRequest.Cid,
-							VisitorID:   visitorID,
-							CustomerID:  activateRequest.Vid,
-							CampaignID:  activateRequest.Caid,
-							VariationID: activateRequest.Vaid,
-							Timestamp:   now.UnixNano() / 1000000,
+							EnvID:           activateRequest.Cid,
+							VisitorID:       visitorID,
+							CustomerID:      activateRequest.Vid,
+							CampaignID:      activateRequest.Caid,
+							VariationID:     activateRequest.Vaid,
+							Timestamp:       now.UnixNano() / 1000000,
+							PersistActivate: persistAssignment,
 						},
 					},
 				})
 		}(errors)
 
-		close(errors)
-
-		for err := range errors {
+		for i := 0; i < chanLength; i++ {
+			err := <-errors
 			if err != nil {
 				utils.WriteServerError(w, err)
 				return

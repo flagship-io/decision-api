@@ -8,25 +8,33 @@ import (
 	common "github.com/flagship-io/flagship-common"
 )
 
-var lock = sync.Mutex{}
-var cache = map[string]*common.VisitorAssignments{}
-var separator = "."
+type MemoryManager struct {
+	cache     map[string]*common.VisitorAssignments
+	lock      *sync.Mutex
+	separator string
+}
 
-type MemoryManager struct{}
+func InitMemoryManager() *MemoryManager {
+	return &MemoryManager{
+		cache:     map[string]*common.VisitorAssignments{},
+		lock:      &sync.Mutex{},
+		separator: ".",
+	}
+}
 
-func (*MemoryManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
-	lock.Lock()
-	assignments := cache[envID+separator+visitorID]
-	lock.Unlock()
+func (m *MemoryManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
+	m.lock.Lock()
+	assignments := m.cache[envID+m.separator+visitorID]
+	m.lock.Unlock()
 	return assignments, nil
 }
 
-func (*MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
-	lock.Lock()
-	cache[envID+separator+visitorID] = &common.VisitorAssignments{
+func (m *MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+	m.lock.Lock()
+	m.cache[envID+m.separator+visitorID] = &common.VisitorAssignments{
 		Timestamp:   date.UnixMilli(),
 		Assignments: vgIDAssignments,
 	}
-	lock.Unlock()
+	m.lock.Unlock()
 	return nil
 }

@@ -12,8 +12,7 @@ import (
 func TestMemoryCache(t *testing.T) {
 	envID := "env_id"
 	visID := "visID"
-	m := &MemoryManager{}
-
+	m := InitMemoryManager()
 	r, err := m.LoadAssignments(envID, visID)
 
 	var nullResp *decision.VisitorAssignments
