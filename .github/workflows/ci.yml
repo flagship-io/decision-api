@@ -26,5 +26,3 @@ jobs:
         with:
           file: ./cover.out
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Update codecov
-        run: bash <(curl -s https://codecov.io/bash)
