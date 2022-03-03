@@ -96,7 +96,7 @@ func CreateMockDecisionContext() *connectors.DecisionContext {
 		APIKey: "api_key_id",
 		Connectors: connectors.Connectors{
 			HitsProcessor:      &hits_processors.EmptyTracker{},
-			AssignmentsManager: &assignments_managers.InMemory{},
+			AssignmentsManager: &assignments_managers.MemoryManager{},
 			EnvironmentLoader: &environment_loaders.MockLoader{
 				MockedEnvironment: &common.Environment{
 					Campaigns: []*common.Campaign{

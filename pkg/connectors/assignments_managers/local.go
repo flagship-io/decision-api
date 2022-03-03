@@ -10,8 +10,8 @@ import (
 	"github.com/prologic/bitcask"
 )
 
-// LocalCacheManager represents the local db manager object
-type LocalCacheManager struct {
+// LocalManager represents the local db manager object
+type LocalManager struct {
 	db           *bitcask.Bitcask
 	keySeparator string
 }
@@ -22,7 +22,7 @@ type LocalOptions struct {
 	keySeparator string
 }
 
-func InitLocalCacheManager(localOptions LocalOptions) (m *LocalCacheManager, err error) {
+func InitLocalCacheManager(localOptions LocalOptions) (m *LocalManager, err error) {
 	db, err := bitcask.Open(localOptions.DbPath)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func InitLocalCacheManager(localOptions LocalOptions) (m *LocalCacheManager, err
 	if localOptions.keySeparator == "" {
 		localOptions.keySeparator = "."
 	}
-	m = &LocalCacheManager{
+	m = &LocalManager{
 		db:           db,
 		keySeparator: localOptions.keySeparator,
 	}
@@ -40,7 +40,7 @@ func InitLocalCacheManager(localOptions LocalOptions) (m *LocalCacheManager, err
 }
 
 // Set saves the campaigns in cache for this visitor
-func (m *LocalCacheManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	if m.db == nil {
 		return errors.New("local cache manager not initialized")
 	}
@@ -58,7 +58,7 @@ func (m *LocalCacheManager) SaveAssignments(envID string, visitorID string, vgID
 }
 
 // LoadAssignments returns the visitor assignment in cache
-func (m *LocalCacheManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
+func (m *LocalManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	if m.db == nil {
 		return nil, errors.New("local cache manager not initialized")
 	}
@@ -66,6 +66,9 @@ func (m *LocalCacheManager) LoadAssignments(envID string, visitorID string) (*co
 	data, err := m.db.Get([]byte(envID + m.keySeparator + visitorID))
 
 	if err != nil {
+		if err == bitcask.ErrKeyNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -80,7 +83,7 @@ func (m *LocalCacheManager) LoadAssignments(envID string, visitorID string) (*co
 }
 
 // Dispose frees IO resources
-func (m *LocalCacheManager) Dispose() error {
+func (m *LocalManager) Dispose() error {
 	if m.db == nil {
 		return nil
 	}

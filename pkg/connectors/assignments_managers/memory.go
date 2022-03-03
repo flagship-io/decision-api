@@ -12,16 +12,16 @@ var lock = sync.Mutex{}
 var cache = map[string]*common.VisitorAssignments{}
 var separator = "."
 
-type InMemory struct{}
+type MemoryManager struct{}
 
-func (*InMemory) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
+func (*MemoryManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	lock.Lock()
 	assignments := cache[envID+separator+visitorID]
 	lock.Unlock()
 	return assignments, nil
 }
 
-func (*InMemory) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (*MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	lock.Lock()
 	cache[envID+separator+visitorID] = &common.VisitorAssignments{
 		Timestamp:   date.UnixMilli(),

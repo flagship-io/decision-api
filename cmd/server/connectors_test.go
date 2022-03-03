@@ -14,7 +14,7 @@ func TestGetAssignmentsManager(t *testing.T) {
 	cfg.Set("cache_type", "")
 	assignmentsManager, err := getAssignmentsManager(cfg)
 	assert.Nil(t, err)
-	assert.IsType(t, assignmentsManager, &assignments_managers.Empty{})
+	assert.IsType(t, assignmentsManager, &assignments_managers.EmptyManager{})
 
 	cfg.Set("cache_type", "redis")
 	_, err = getAssignmentsManager(cfg)

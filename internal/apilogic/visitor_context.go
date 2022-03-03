@@ -13,11 +13,17 @@ func SendVisitorContext(handleRequest *handle.Request) {
 		contextMap[k] = v.AsInterface()
 	}
 
+	visitorID := handleRequest.DecisionRequest.VisitorId.GetValue()
+	// If anonymous id is defined
+	if handleRequest.DecisionRequest.AnonymousId != nil {
+		visitorID = handleRequest.DecisionRequest.AnonymousId.GetValue()
+	}
 	visitorContext := &models.VisitorContext{
-		EnvID:     handleRequest.DecisionContext.EnvID,
-		VisitorID: handleRequest.DecisionRequest.VisitorId.Value,
-		Context:   contextMap,
-		Timestamp: handleRequest.Time.UnixNano() / 1000000,
+		EnvID:      handleRequest.DecisionContext.EnvID,
+		VisitorID:  visitorID,
+		CustomerID: handleRequest.DecisionRequest.VisitorId.GetValue(),
+		Context:    contextMap,
+		Timestamp:  handleRequest.Time.UnixNano() / 1000000,
 	}
 
 	err := handleRequest.DecisionContext.HitsProcessor.TrackHits(connectors.TrackingHits{VisitorContext: []*models.VisitorContext{

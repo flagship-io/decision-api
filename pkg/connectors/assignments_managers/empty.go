@@ -7,12 +7,12 @@ import (
 	common "github.com/flagship-io/flagship-common"
 )
 
-type Empty struct{}
+type EmptyManager struct{}
 
-func (*Empty) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
+func (*EmptyManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	return nil, nil
 }
 
-func (*Empty) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (*EmptyManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
 	return nil
 }

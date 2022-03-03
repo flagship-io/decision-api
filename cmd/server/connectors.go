@@ -9,7 +9,7 @@ import (
 func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.AssignmentsManager, err error) {
 	switch cfg.GetStringDefault("cache_type", "") {
 	case "memory":
-		assignmentsManager = &assignments_managers.InMemory{}
+		assignmentsManager = &assignments_managers.MemoryManager{}
 	case "local":
 		assignmentsManager, err = assignments_managers.InitLocalCacheManager(assignments_managers.LocalOptions{
 			DbPath: cfg.GetStringDefault("cache_options_dbpath", ""),
@@ -23,7 +23,7 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 			LogLevel: config.LoggerLevel,
 		})
 	default:
-		assignmentsManager = &assignments_managers.Empty{}
+		assignmentsManager = &assignments_managers.EmptyManager{}
 	}
 
 	return assignmentsManager, err
