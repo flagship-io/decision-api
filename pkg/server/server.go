@@ -116,7 +116,6 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 	mux.HandleFunc("/v2/campaigns", handlers.Campaigns(context))
 	mux.HandleFunc("/v2/campaigns/*", handlers.Campaign(context))
 	mux.HandleFunc("/v2/activate", handlers.Activate(context))
-	mux.HandleFunc("/v2/activate-batch", handlers.ActivateMultiple(context))
 	mux.HandleFunc("/v2/flags", handlers.Flags(context))
 	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
 
