@@ -39,12 +39,14 @@ func TestLocalCache(t *testing.T) {
 	}
 	cache.Assignments["vgID"] = &decision.VisitorCache{VariationID: "vID"}
 	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
-
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 
 	r, err = m.LoadAssignments(envID, visID)
-	assert.Equal(t, nil, err)
+	assert.Nil(t, err)
 	assert.NotEqual(t, nil, r.Assignments["vgID"])
+
+	err = m.Dispose()
+	assert.Nil(t, err)
 
 	err = os.RemoveAll(testFolder)
 	assert.Equal(t, nil, err)

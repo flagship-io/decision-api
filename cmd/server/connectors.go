@@ -12,7 +12,7 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 		assignmentsManager = &assignments_managers.MemoryManager{}
 	case "local":
 		assignmentsManager, err = assignments_managers.InitLocalCacheManager(assignments_managers.LocalOptions{
-			DbPath: cfg.GetStringDefault("cache_options_dbpath", ""),
+			DbPath: cfg.GetStringDefault("cache_options_dbpath", "cache_data"),
 		})
 	case "redis":
 		assignmentsManager, err = assignments_managers.InitRedisManager(assignments_managers.RedisOptions{

@@ -4,9 +4,9 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors"
 )
 
-type EmptyTracker struct {
+type EmptyHitProcessor struct {
 }
 
-func (d *EmptyTracker) TrackHits(hits connectors.TrackingHits) error {
+func (d *EmptyHitProcessor) TrackHits(hits connectors.TrackingHits) error {
 	return nil
 }

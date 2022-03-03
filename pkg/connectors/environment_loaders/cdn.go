@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -25,14 +26,22 @@ const logName = "CDN Loader"
 
 type CDNLoader struct {
 	baseURL           string
+	httpClient        *http.Client
 	lastModified      string
 	timeout           time.Duration
 	pollingInternal   time.Duration
 	loadedEnvironment *common.Environment
 	logger            *logger.Logger
+	lock              *sync.RWMutex
 }
 
 type CDNLoaderOptionBuilder func(*CDNLoader)
+
+func WithBaseURL(url string) CDNLoaderOptionBuilder {
+	return func(l *CDNLoader) {
+		l.baseURL = url
+	}
+}
 
 func WithPollingInterval(pollingInterval time.Duration) CDNLoaderOptionBuilder {
 	return func(l *CDNLoader) {
@@ -46,17 +55,27 @@ func WithLogLevel(lvl string) CDNLoaderOptionBuilder {
 	}
 }
 
+func WithHTTPClient(client *http.Client) CDNLoaderOptionBuilder {
+	return func(l *CDNLoader) {
+		l.httpClient = client
+	}
+}
+
 func NewCDNLoader(opts ...CDNLoaderOptionBuilder) *CDNLoader {
 	loader := &CDNLoader{
 		baseURL:         defaultBaseURL,
+		httpClient:      &http.Client{},
 		timeout:         defaultTimeout,
 		pollingInternal: defaultPollingInterval,
 		logger:          logger.New(logrus.WarnLevel.String(), logName),
+		lock:            &sync.RWMutex{},
 	}
 
 	for _, o := range opts {
 		o(loader)
 	}
+
+	loader.httpClient.Timeout = loader.timeout
 
 	return loader
 }
@@ -94,16 +113,16 @@ func (loader *CDNLoader) Init(envID string, APIKey string) error {
 }
 
 func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
-	client := &http.Client{
-		Timeout: l.timeout,
-	}
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/%s/bucketing.json", l.baseURL, envID), nil)
 	if err != nil {
 		return fmt.Errorf("an error occured when creating HTTP request: %v", err)
 	}
 
+	l.lock.RLock()
 	req.Header.Set("If-Modified-Since", l.lastModified)
-	resp, err := client.Do(req)
+	l.lock.RUnlock()
+
+	resp, err := l.httpClient.Do(req)
 	if err != nil {
 		l.logger.Errorf("an error occured when fetching environment: %v", err)
 		return err
@@ -137,15 +156,17 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 		campaigns = append(campaigns, campaignToCommonStruct(c))
 	}
 
+	l.lock.Lock()
 	l.loadedEnvironment = &common.Environment{
 		ID:                envID,
 		Campaigns:         campaigns,
 		IsPanic:           conf.Panic,
 		SingleAssignment:  conf.AccountSettings.Enabled1V1T,
-		UseReconciliation: conf.VisitorConsolidation,
+		UseReconciliation: conf.AccountSettings.EnabledXPC || conf.VisitorConsolidation,
 		CacheEnabled:      true,
 	}
 	l.lastModified = resp.Header.Get("Last-Modified")
+	l.lock.Unlock()
 	l.logger.Infof("environment with id %s loaded", envID)
 
 	return nil
@@ -204,6 +225,8 @@ func campaignToCommonStruct(c *bucketing.Bucketing_BucketingCampaign) *common.Ca
 }
 
 func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*common.Environment, error) {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
 	if l.loadedEnvironment == nil {
 		err := l.fetchEnvironment(envID, APIKey)
 		return l.loadedEnvironment, err
