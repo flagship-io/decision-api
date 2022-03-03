@@ -70,7 +70,10 @@ func WritePanicResponse(w http.ResponseWriter, visitorID *wrapperspb.StringValue
 	decisionResponse.VisitorId = visitorID
 	decisionResponse.Panic = true
 
-	data, err := protojson.Marshal(&decisionResponse)
+	marshalOptions := protojson.MarshalOptions{
+		EmitUnpopulated: true,
+	}
+	data, err := marshalOptions.Marshal(&decisionResponse)
 	if err != nil {
 		WriteServerError(w, err)
 		return
