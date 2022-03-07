@@ -12,13 +12,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const apiKeyURLParam = "token"
-
-// GetAPIKeyURLParam returns the name of the url param when passed by url
-func GetAPIKeyURLParam() string {
-	return apiKeyURLParam
-}
-
 // GetDecisionRequest transforms http request into a DecisionRequest
 func GetDecisionRequest(r *http.Request) (*decision_request.DecisionRequest, error) {
 	decisionRequest, err := unmarshalHit(r)

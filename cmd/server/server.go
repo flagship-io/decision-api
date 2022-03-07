@@ -38,7 +38,7 @@ func main() {
 				environment_loaders.WithLogLevel(lvl),
 				environment_loaders.WithPollingInterval(cfg.GetDuration("polling_interval"))),
 		),
-		server.WithExperienceTracker(hits_processors.NewDataCollectTracker(lvl)),
+		server.WithHitsProcessor(hits_processors.NewDataCollectTracker(lvl)),
 		server.WithAssignmentsManager(assignmentManager),
 	)
 

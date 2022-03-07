@@ -6,13 +6,16 @@ import (
 
 	_ "github.com/flagship-io/decision-api/docs"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
+	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
+	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/handlers"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type ServerOptions struct {
-	experienceTracker  connectors.HitsProcessor
+	hitsProcessor      connectors.HitsProcessor
 	environmentLoader  connectors.EnvironmentLoader
 	assignmentsManager connectors.AssignmentsManager
 	logger             *logger.Logger
@@ -20,9 +23,9 @@ type ServerOptions struct {
 
 type ServerOptionsBuilder func(*ServerOptions)
 
-func WithExperienceTracker(tracker connectors.HitsProcessor) ServerOptionsBuilder {
+func WithHitsProcessor(tracker connectors.HitsProcessor) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
-		h.experienceTracker = tracker
+		h.hitsProcessor = tracker
 	}
 }
 
@@ -65,7 +68,12 @@ func (srv *Server) Listen(addr string) error {
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*Server, error) {
-	serverOptions := &ServerOptions{}
+	serverOptions := &ServerOptions{
+		logger:             logger.New("error", "server"),
+		environmentLoader:  environment_loaders.NewCDNLoader(),
+		hitsProcessor:      hits_processors.NewDataCollectTracker("error"),
+		assignmentsManager: &assignments_managers.EmptyManager{},
+	}
 
 	for _, opt := range opts {
 		opt(serverOptions)
@@ -87,7 +95,7 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		return nil, errors.New("missing mandatory environmentLoader connector")
 	}
 
-	if serverOptions.experienceTracker == nil {
+	if serverOptions.hitsProcessor == nil {
 		return nil, errors.New("missing mandatory experienceTracker connector")
 	}
 
@@ -105,7 +113,7 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 		EnvID:  envID,
 		Logger: serverOptions.logger,
 		Connectors: connectors.Connectors{
-			HitsProcessor:      serverOptions.experienceTracker,
+			HitsProcessor:      serverOptions.hitsProcessor,
 			EnvironmentLoader:  serverOptions.environmentLoader,
 			AssignmentsManager: serverOptions.assignmentsManager,
 		},
