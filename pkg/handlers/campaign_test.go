@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func TestCampaignAssignment(t *testing.T) {
+func TestCampaign(t *testing.T) {
 	url, _ := url.Parse("/v2/campaigns/campaign_1?sendContextEvent=false")
 	body := `{"visitor_id": "1234", "context": {}, "trigger_hit": false }`
 	w := httptest.NewRecorder()

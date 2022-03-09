@@ -66,16 +66,16 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	// If sendContext explicitely set to !true or context is empty, return
 	if handleRequest.SendContextEvent && len(handleRequest.DecisionRequest.Context) > 0 {
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, handleRequest *handle.Request, tracker *common.Tracker) {
+		go func() {
 			defer wg.Done()
 
 			tracker.TimeTrack("start track visitor context")
 			SendVisitorContext(handleRequest)
 			tracker.TimeTrack("end track visitor context")
-		}(wg, handleRequest, tracker)
+		}()
 	}
 
-	go func(wg *sync.WaitGroup, handleRequest *handle.Request, w http.ResponseWriter, tracker *common.Tracker) {
+	go func() {
 		defer wg.Done()
 
 		tracker.TimeTrack("start compute campaigns request logic")
@@ -84,7 +84,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 			handleDecision(w, handleRequest, err)
 		}
 		tracker.TimeTrack("end compute campaigns request logic")
-	}(wg, handleRequest, w, tracker)
+	}()
 
 	wg.Wait()
 }

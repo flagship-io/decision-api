@@ -5,6 +5,7 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -69,6 +70,52 @@ func TestGetCampaignResponse(t *testing.T) {
 	if nbKeys != 2 {
 		t.Errorf("Expected %v modif value because of exposeAllKeys true. Got %v", 2, nbKeys)
 	}
+}
+
+func TestDecision(t *testing.T) {
+	err := Decision(&Request{}, nil)
+	assert.NotNil(t, err)
+
+	visID1 := "vis_id"
+	clientID := "client_id"
+
+	campaigns := []*common.Campaign{
+		utils.CreateABCampaignMock(
+			"campaign1",
+			"vg1",
+			utils.CreateAllUsersTargetingMock(),
+			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+		),
+	}
+	clientInfos := common.Environment{
+		ID:        clientID,
+		Campaigns: campaigns,
+	}
+	hitsProcessor := &hits_processors.MockHitProcessor{}
+	handleRequest := Request{
+		DecisionContext: &connectors.DecisionContext{
+			EnvID: clientID,
+			Connectors: connectors.Connectors{
+				HitsProcessor: hitsProcessor,
+			},
+		},
+		DecisionRequest: &decision_request.DecisionRequest{
+			VisitorId:  &wrapperspb.StringValue{Value: visID1},
+			TriggerHit: wrapperspb.Bool(true),
+			Context:    map[string]*structpb.Value{},
+		},
+		Environment: &clientInfos,
+	}
+
+	// Check that at first view, only 1 ab test is returned
+	err = Decision(&handleRequest, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, handleRequest.DecisionResponse)
+	assert.Equal(t, 1, len(handleRequest.DecisionResponse.Campaigns))
+	assert.Equal(t, 1, len(hitsProcessor.TrackedHits.CampaignActivations))
+	assert.Equal(t, "vg1", hitsProcessor.TrackedHits.CampaignActivations[0].CampaignID)
+	assert.Contains(t, hitsProcessor.TrackedHits.CampaignActivations[0].VariationID, "v_")
+	assert.Equal(t, visID1, hitsProcessor.TrackedHits.CampaignActivations[0].VisitorID)
 }
 
 func TestDecision1Vis1Test(t *testing.T) {

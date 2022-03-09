@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFlagsAssignment(t *testing.T) {
+func TestFlags(t *testing.T) {
 	url, _ := url.Parse("/flags?sendContextEvent=false")
 	body := `{"visitor_id": "1234", "context": {}, "trigger_hit": false }`
 	w := httptest.NewRecorder()
