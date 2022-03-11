@@ -5,6 +5,7 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/handle"
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/flagship-common/targeting"
 )
 
 // BuildHandleRequest builds a handle.Request object from the API Gateway request
@@ -29,8 +30,11 @@ func BuildHandleRequest(req *http.Request) (*handle.Request, error) {
 
 	sendContextEvent := req.URL.Query().Get("sendContextEvent")
 	handleRequest.SendContextEvent = sendContextEvent != "false"
-
 	handleRequest.DecisionRequest = decisionRequest
+	handleRequest.FullVisitorContext = &targeting.Context{
+		Standard:             decisionRequest.GetContext(),
+		IntegrationProviders: map[string]targeting.ContextMap{},
+	}
 	handleRequest.Extras = req.URL.Query()["extras"]
 
 	return &handleRequest, nil

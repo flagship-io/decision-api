@@ -18,17 +18,18 @@ import (
 
 // Request represents the infos of the requests needed for the decision API
 type Request struct {
-	DecisionRequest  *decision_request.DecisionRequest
-	DecisionContext  *connectors.DecisionContext
-	DecisionResponse *decision_response.DecisionResponse
-	Environment      *common.Environment
-	CampaignID       string
-	Mode             string
-	Extras           []string
-	ExposeAllKeys    bool
-	SendContextEvent bool
-	Time             time.Time
-	Logger           *logger.Logger
+	DecisionRequest    *decision_request.DecisionRequest
+	DecisionContext    *connectors.DecisionContext
+	DecisionResponse   *decision_response.DecisionResponse
+	FullVisitorContext *targeting.Context
+	Environment        *common.Environment
+	CampaignID         string
+	Mode               string
+	Extras             []string
+	ExposeAllKeys      bool
+	SendContextEvent   bool
+	Time               time.Time
+	Logger             *logger.Logger
 }
 
 func NewRequestFromHTTP(req *http.Request) Request {
@@ -70,9 +71,7 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			ID:            handleRequest.DecisionRequest.VisitorId.GetValue(),
 			AnonymousID:   handleRequest.DecisionRequest.AnonymousId.GetValue(),
 			DecisionGroup: handleRequest.DecisionRequest.DecisionGroup.GetValue(),
-			Context: &targeting.Context{
-				Standard: handleRequest.DecisionRequest.Context,
-			},
+			Context:       handleRequest.FullVisitorContext,
 		},
 		*handleRequest.Environment,
 		common.DecisionOptions{

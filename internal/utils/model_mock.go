@@ -28,6 +28,24 @@ func CreateAllUsersTargetingMock() *targeting.Targeting {
 	}
 }
 
+// CreateTargetingWithProvider creates a mock targeting with an integration provider
+func CreateTargetingWithProvider() *targeting.Targeting {
+	return &targeting.Targeting{
+		TargetingGroups: []*targeting.Targeting_TargetingGroup{
+			{
+				Targetings: []*targeting.Targeting_InnerTargeting{
+					{
+						Operator: targeting.Targeting_GREATER_THAN,
+						Key:      &wrapperspb.StringValue{Value: "age"},
+						Value:    structpb.NewNumberValue(20),
+						Provider: &wrapperspb.StringValue{Value: "mixpanel"},
+					},
+				},
+			},
+		},
+	}
+}
+
 // CreateModification returns a single modification with key value string as byte array
 func CreateModification(key string, value interface{}, modifType decision_response.ModificationsType) *decision_response.Modifications {
 	// Modif of type flag string

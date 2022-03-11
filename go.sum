@@ -144,6 +144,8 @@ github.com/flagship-io/flagship-common v0.0.17-beta.4 h1:ML9HdqhI6YC67hiRrvpJYf7
 github.com/flagship-io/flagship-common v0.0.17-beta.4/go.mod h1:HhJ+TyhlEGkIvlGbXufzspyShmwXtcdv2mbG3ARht0A=
 github.com/flagship-io/flagship-common v0.0.17-beta.5 h1:sWqwC3rYdPEn308rJO09vpGqzdResYT96Nl/TeCq4BU=
 github.com/flagship-io/flagship-common v0.0.17-beta.5/go.mod h1:HhJ+TyhlEGkIvlGbXufzspyShmwXtcdv2mbG3ARht0A=
+github.com/flagship-io/flagship-common v0.0.17-beta.6 h1:jpk3XNnxhDJgzOVXwr1+w2i/P5xCfj0qJ92B/WYCGFY=
+github.com/flagship-io/flagship-common v0.0.17-beta.6/go.mod h1:HhJ+TyhlEGkIvlGbXufzspyShmwXtcdv2mbG3ARht0A=
 github.com/flagship-io/flagship-proto v0.0.11/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
 github.com/flagship-io/flagship-proto v0.0.13 h1:C1i/x6W4DLDydecM4VfgMyuYEc8n7ogloI4N6EG/66g=
 github.com/flagship-io/flagship-proto v0.0.13/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=

@@ -18,17 +18,30 @@ func SendVisitorContext(handleRequest *handle.Request) {
 	if handleRequest.DecisionRequest.AnonymousId != nil {
 		visitorID = handleRequest.DecisionRequest.AnonymousId.GetValue()
 	}
-	visitorContext := &models.VisitorContext{
+
+	contexts := []*models.VisitorContext{{
 		EnvID:      handleRequest.DecisionContext.EnvID,
 		VisitorID:  visitorID,
 		CustomerID: handleRequest.DecisionRequest.VisitorId.GetValue(),
 		Context:    contextMap,
 		Timestamp:  handleRequest.Time.UnixNano() / 1000000,
-	}
+	}}
 
-	err := handleRequest.DecisionContext.HitsProcessor.TrackHits(connectors.TrackingHits{VisitorContext: []*models.VisitorContext{
-		visitorContext,
-	}})
+	for partner, context := range handleRequest.FullVisitorContext.IntegrationProviders {
+		contextMap := map[string]interface{}{}
+		for k, v := range context {
+			contextMap[k] = v.AsInterface()
+		}
+		contexts = append(contexts, &models.VisitorContext{
+			EnvID:      handleRequest.DecisionContext.EnvID,
+			VisitorID:  visitorID,
+			Partner:    partner,
+			CustomerID: handleRequest.DecisionRequest.VisitorId.GetValue(),
+			Context:    contextMap,
+			Timestamp:  handleRequest.Time.UnixNano() / 1000000,
+		})
+	}
+	err := handleRequest.DecisionContext.HitsProcessor.TrackHits(connectors.TrackingHits{VisitorContext: contexts})
 	if err != nil {
 		handleRequest.Logger.Errorf("Error on queuing visitor context : %v", err)
 	}

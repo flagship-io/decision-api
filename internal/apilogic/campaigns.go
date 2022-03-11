@@ -11,6 +11,8 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
 	common "github.com/flagship-io/flagship-common"
+	"github.com/flagship-io/flagship-common/targeting"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // HandleCampaigns get campaigns from request, add checks and side effect and return response
@@ -37,7 +39,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		return
 	}
 
-	// 4. Checks that optional campaign ID exists
+	// 2. Checks that optional campaign ID exists
 	if handleRequest.CampaignID != "" {
 		filteredCampaigns := []*common.Campaign{}
 		for _, v := range handleRequest.Environment.Campaigns {
@@ -54,10 +56,24 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		handleRequest.Environment.Campaigns = filteredCampaigns
 	}
 
-	// 5. Return panic response is panic mode activated
+	// 3. Return panic response is panic mode activated
 	if handleRequest.Environment.IsPanic {
 		utils.WritePanicResponse(w, handleRequest.DecisionRequest.VisitorId)
 		return
+	}
+
+	// 4 Get context keys from integration service (if needed)
+	hasIntegrationTargeting := false
+	for _, c := range handleRequest.Environment.Campaigns {
+		if c.HasIntegrationProviderTargeting() {
+			hasIntegrationTargeting = true
+			break
+		}
+	}
+	if hasIntegrationTargeting {
+		tracker.TimeTrack("start get visitor context from integration service")
+		fillVisitorContext(handleRequest)
+		tracker.TimeTrack("end get visitor context from integration service")
 	}
 
 	wg := &sync.WaitGroup{}
@@ -87,4 +103,21 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	}()
 
 	wg.Wait()
+}
+
+func fillVisitorContext(request *handle.Request) error {
+	data, err := utils.FetchVisitorData(request.DecisionContext.EnvID, request.DecisionRequest.VisitorId.Value)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range *data {
+		if _, ok := request.FullVisitorContext.IntegrationProviders[row.Partner]; !ok {
+			request.FullVisitorContext.IntegrationProviders[row.Partner] = targeting.ContextMap{}
+		}
+
+		request.FullVisitorContext.IntegrationProviders[row.Partner][row.Segment] = structpb.NewStringValue(row.Value)
+	}
+
+	return nil
 }

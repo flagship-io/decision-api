@@ -14,34 +14,37 @@ import (
 func TestCreateServer(t *testing.T) {
 	envID := ""
 	apiKey := ""
-	_, err := CreateServer(envID, apiKey)
+	_, err := CreateServer(envID, apiKey, ":8080")
 	assert.NotNil(t, err)
 
 	envID = "env_id"
-	_, err = CreateServer(envID, apiKey)
+	_, err = CreateServer(envID, apiKey, ":8080")
 	assert.NotNil(t, err)
 
 	apiKey = "api_key"
-	_, err = CreateServer(envID, apiKey)
+	_, err = CreateServer(envID, apiKey, ":8080")
 	assert.Nil(t, err)
 
-	_, err = CreateServer(envID, apiKey, WithAssignmentsManager(nil))
+	_, err = CreateServer(envID, apiKey, ":8080", WithAssignmentsManager(nil))
 	assert.NotNil(t, err)
 
-	_, err = CreateServer(envID, apiKey, WithEnvironmentLoader(nil))
+	_, err = CreateServer(envID, apiKey, ":8080", WithEnvironmentLoader(nil))
 	assert.NotNil(t, err)
 
-	_, err = CreateServer(envID, apiKey, WithHitsProcessor(nil))
+	_, err = CreateServer(envID, apiKey, ":8080", WithHitsProcessor(nil))
 	assert.NotNil(t, err)
 
-	_, err = CreateServer(envID, apiKey, WithLogger(nil))
+	_, err = CreateServer(envID, apiKey, ":8080", WithLogger(nil))
 	assert.NotNil(t, err)
 
 	assignmentManager := assignments_managers.InitMemoryManager()
 	hitsProcessor := &hits_processors.MockHitProcessor{}
 	environmentLoader := &environment_loaders.MockLoader{}
 	log := logger.New("debug", "test")
-	server, err := CreateServer(envID, apiKey,
+	server, err := CreateServer(
+		envID,
+		apiKey,
+		":8080",
 		WithAssignmentsManager(assignmentManager),
 		WithHitsProcessor(hitsProcessor),
 		WithEnvironmentLoader(environmentLoader),
@@ -51,5 +54,4 @@ func TestCreateServer(t *testing.T) {
 	assert.Equal(t, hitsProcessor, server.options.hitsProcessor)
 	assert.Equal(t, environmentLoader, server.options.environmentLoader)
 	assert.Equal(t, log, server.options.logger)
-
 }

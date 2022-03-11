@@ -45,6 +45,7 @@ type VisitorContext struct {
 	VisitorID  string                 `json:"vid"`
 	CustomerID string                 `json:"cuid"`
 	Context    map[string]interface{} `json:"s"`
+	Partner    string                 `json:"pa,omitempty"`
 	Timestamp  int64
 	QueueTime  int64 `json:"qt"`
 }

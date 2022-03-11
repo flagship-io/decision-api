@@ -6,6 +6,7 @@ import (
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/flagship-common/targeting"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -104,6 +105,10 @@ func TestDecision(t *testing.T) {
 			TriggerHit: wrapperspb.Bool(true),
 			Context:    map[string]*structpb.Value{},
 		},
+		FullVisitorContext: &targeting.Context{
+			Standard:             map[string]*structpb.Value{},
+			IntegrationProviders: make(map[string]targeting.ContextMap),
+		},
 		Environment: &clientInfos,
 	}
 
@@ -152,6 +157,10 @@ func TestDecision1Vis1Test(t *testing.T) {
 			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
 		},
+		FullVisitorContext: &targeting.Context{
+			Standard:             map[string]*structpb.Value{},
+			IntegrationProviders: make(map[string]targeting.ContextMap),
+		},
 		Environment: &clientInfos,
 	}
 
@@ -173,6 +182,10 @@ func TestDecisionNoReconciliation(t *testing.T) {
 			VisitorId:  &wrapperspb.StringValue{Value: anonymousID},
 			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
+		},
+		FullVisitorContext: &targeting.Context{
+			Standard:             map[string]*structpb.Value{},
+			IntegrationProviders: make(map[string]targeting.ContextMap),
 		},
 	}
 
@@ -229,6 +242,10 @@ func TestDecisionReconciliation(t *testing.T) {
 			TriggerHit: &wrapperspb.BoolValue{Value: false},
 			Context:    map[string]*structpb.Value{},
 		},
+		FullVisitorContext: &targeting.Context{
+			Standard:             map[string]*structpb.Value{},
+			IntegrationProviders: make(map[string]targeting.ContextMap),
+		},
 	}
 
 	campaigns := []*common.Campaign{
@@ -284,4 +301,22 @@ func TestDecisionReconciliation(t *testing.T) {
 	assert.Equal(t, 1, len(handleRequest.DecisionResponse.Campaigns))
 
 	assert.Equal(t, assignVariationID, handleRequest.DecisionResponse.Campaigns[0].Variation.Id.Value)
+
+	handleRequest.FullVisitorContext.IntegrationProviders["mixpanel"] = map[string]*structpb.Value{
+		"age": structpb.NewNumberValue(21),
+	}
+	campaigns = []*common.Campaign{
+		utils.CreateABCampaignMock(
+			"campaign4",
+			"vg3",
+			utils.CreateTargetingWithProvider(),
+			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+		),
+	}
+	clientInfos.Campaigns = campaigns
+
+	err = Decision(&handleRequest, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, handleRequest.DecisionResponse)
+	assert.Equal(t, 1, len(handleRequest.DecisionResponse.Campaigns))
 }

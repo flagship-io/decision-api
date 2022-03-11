@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	_ "github.com/flagship-io/decision-api/docs"
 	"github.com/flagship-io/decision-api/pkg/connectors"
@@ -49,11 +51,11 @@ func WithLogger(logger *logger.Logger) ServerOptionsBuilder {
 
 type Server struct {
 	options    *ServerOptions
-	httpServer *http.ServeMux
+	httpServer *http.Server
 }
 
-func (srv *Server) Listen(addr string) error {
-	return http.ListenAndServe(addr, srv.httpServer)
+func (srv *Server) Listen() error {
+	return srv.httpServer.ListenAndServe()
 }
 
 // @title Flagship Decision API
@@ -67,7 +69,7 @@ func (srv *Server) Listen(addr string) error {
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*Server, error) {
+func CreateServer(envID string, apiKey string, addr string, opts ...ServerOptionsBuilder) (*Server, error) {
 	serverOptions := &ServerOptions{
 		logger:             logger.New("error", "server"),
 		environmentLoader:  environment_loaders.NewCDNLoader(),
@@ -128,9 +130,18 @@ func CreateServer(envID string, apiKey string, opts ...ServerOptionsBuilder) (*S
 	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
 
 	server := &Server{
-		options:    serverOptions,
-		httpServer: mux,
+		options: serverOptions,
+		httpServer: &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			Addr:         addr,
+			Handler:      mux,
+		},
 	}
 
 	return server, nil
+}
+
+func (s *Server) Shutdown(context context.Context) error {
+	return s.httpServer.Shutdown(context)
 }
