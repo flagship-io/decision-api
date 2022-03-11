@@ -72,7 +72,10 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	}
 	if hasIntegrationTargeting {
 		tracker.TimeTrack("start get visitor context from integration service")
-		fillVisitorContext(handleRequest)
+		err := fillVisitorContext(handleRequest)
+		if err != nil {
+			handleRequest.DecisionContext.Logger.Warnf("error occured when getting integration visitor context: %v", err)
+		}
 		tracker.TimeTrack("end get visitor context from integration service")
 	}
 

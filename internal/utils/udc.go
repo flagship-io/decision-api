@@ -35,7 +35,7 @@ func FetchVisitorData(environmentID string, visitorID string) (*[]UDCVisitorRow,
 	defer r.Body.Close()
 
 	var data []UDCVisitorRow
-	json.NewDecoder(r.Body).Decode(&data)
+	err = json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		return nil, errors.New("fetchVisitorData json decode error : " + err.Error())
 	}
