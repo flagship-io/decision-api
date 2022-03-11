@@ -8,7 +8,7 @@ import (
 )
 
 type Logger struct {
-	logrus.FieldLogger
+	*logrus.Entry
 }
 
 func New(lvl string, component string) *Logger {

@@ -71,7 +71,7 @@ func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssig
 		return err
 	}
 
-	m.logger.Info("Setting visitor cache for ID %s", visitorID)
+	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
 	cmd := m.client.Set(ctx, visitorID, string(data), 0)
 	_, err = cmd.Result()
 

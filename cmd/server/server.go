@@ -9,6 +9,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/server"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	common "github.com/flagship-io/flagship-common"
 )
 
 func main() {
@@ -22,6 +23,16 @@ func main() {
 
 	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
 	log := logger.New(lvl, "server")
+
+	// set the logger for common package
+	commonLogger := logger.New(lvl, "common")
+	if err != nil {
+		log.Warnf("could not parse log level %s", lvl)
+	} else {
+		common.SetLogger(&common.DefaultLogger{
+			Entry: commonLogger.Entry,
+		})
+	}
 
 	log.Infof("creating assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)

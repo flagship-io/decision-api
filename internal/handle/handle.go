@@ -10,6 +10,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
+	"github.com/flagship-io/flagship-common/targeting"
 
 	"github.com/flagship-io/flagship-proto/decision_request"
 	"github.com/flagship-io/flagship-proto/decision_response"
@@ -69,7 +70,9 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			ID:            handleRequest.DecisionRequest.VisitorId.GetValue(),
 			AnonymousID:   handleRequest.DecisionRequest.AnonymousId.GetValue(),
 			DecisionGroup: handleRequest.DecisionRequest.DecisionGroup.GetValue(),
-			Context:       handleRequest.DecisionRequest.Context,
+			Context: &targeting.Context{
+				Standard: handleRequest.DecisionRequest.Context,
+			},
 		},
 		*handleRequest.Environment,
 		common.DecisionOptions{
