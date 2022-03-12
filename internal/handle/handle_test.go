@@ -303,7 +303,7 @@ func TestDecisionReconciliation(t *testing.T) {
 	assert.Equal(t, assignVariationID, handleRequest.DecisionResponse.Campaigns[0].Variation.Id.Value)
 
 	handleRequest.FullVisitorContext.IntegrationProviders["mixpanel"] = map[string]*structpb.Value{
-		"age": structpb.NewNumberValue(21),
+		"age": structpb.NewStringValue("21"),
 	}
 	campaigns = []*common.Campaign{
 		utils.CreateABCampaignMock(

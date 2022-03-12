@@ -24,6 +24,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	}
 
 	handleRequest.DecisionContext = decisionContext
+	handleRequest.Logger = decisionContext.Logger
 
 	// 1. Get environment info from environment ID & API Key
 	tracker.TimeTrack("start get env info from env loader")
@@ -72,6 +73,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	}
 	if hasIntegrationTargeting {
 		tracker.TimeTrack("start get visitor context from integration service")
+		decisionContext.Logger.Info("filling integration visitor context")
 		err := fillVisitorContext(handleRequest)
 		if err != nil {
 			handleRequest.DecisionContext.Logger.Warnf("error occured when getting integration visitor context: %v", err)
@@ -114,7 +116,8 @@ func fillVisitorContext(request *handle.Request) error {
 		return err
 	}
 
-	for _, row := range *data {
+	request.Logger.Infof("got integration context for %d providers", len(data))
+	for _, row := range data {
 		if _, ok := request.FullVisitorContext.IntegrationProviders[row.Partner]; !ok {
 			request.FullVisitorContext.IntegrationProviders[row.Partner] = targeting.ContextMap{}
 		}

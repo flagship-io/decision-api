@@ -5,6 +5,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/flagship-io/flagship-proto/targeting"
@@ -37,7 +38,7 @@ func CreateTargetingWithProvider() *targeting.Targeting {
 					{
 						Operator: targeting.Targeting_GREATER_THAN,
 						Key:      &wrapperspb.StringValue{Value: "age"},
-						Value:    structpb.NewNumberValue(20),
+						Value:    structpb.NewStringValue("20"),
 						Provider: &wrapperspb.StringValue{Value: "mixpanel"},
 					},
 				},
@@ -112,6 +113,7 @@ func CreateMockDecisionContext() *connectors.DecisionContext {
 	return &connectors.DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
+		Logger: logger.New("debug", "mock"),
 		Connectors: connectors.Connectors{
 			HitsProcessor:      &hits_processors.MockHitProcessor{},
 			AssignmentsManager: assignments_managers.InitMemoryManager(),
@@ -128,6 +130,11 @@ func CreateMockDecisionContext() *connectors.DecisionContext {
 							"vg_1",
 							CreateAllUsersTargetingMock(),
 							CreateModification("image", "http://image.jpeg", decision_response.ModificationsType_IMAGE)),
+						CreateABCampaignMock(
+							"campaign_2",
+							"vg_3",
+							CreateTargetingWithProvider(),
+							modifications),
 					},
 				},
 			},

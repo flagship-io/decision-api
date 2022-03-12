@@ -18,7 +18,7 @@ const UDC_TIMEOUT = 1000
 
 var udcUrl string = "https://api-data-connector-eu.abtasty.com"
 
-func FetchVisitorData(environmentID string, visitorID string) (*[]UDCVisitorRow, error) {
+func FetchVisitorData(environmentID string, visitorID string) ([]UDCVisitorRow, error) {
 	if udcUrl == "" {
 		return nil, errors.New("missing UDC_URL env variable")
 	}
@@ -40,5 +40,9 @@ func FetchVisitorData(environmentID string, visitorID string) (*[]UDCVisitorRow,
 		return nil, errors.New("fetchVisitorData json decode error : " + err.Error())
 	}
 
-	return &data, nil
+	return data, nil
+}
+
+func SetUDCUrl(url string) {
+	udcUrl = url
 }

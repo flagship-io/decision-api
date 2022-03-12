@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -111,4 +112,40 @@ func TestCampaigns(t *testing.T) {
 
 	assert.Equal(t, 5, len(decisionResponseSimple.MergedModifications.Fields))
 	assert.Equal(t, 2, len(decisionResponseSimple.CampaignsVariation))
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rows := []utils.UDCVisitorRow{
+			{
+				Segment: "age",
+				Partner: "mixpanel",
+				Value:   "21",
+			},
+		}
+		json, _ := json.Marshal(rows)
+		rw.Write(json)
+	}))
+	// Close the server when test finishes
+	defer server.Close()
+
+	utils.SetUDCUrl(server.URL)
+	// normal mode, send context events true, extras
+	url, _ = url.Parse("/campaigns?mode=normal")
+	w = httptest.NewRecorder()
+	req = &http.Request{
+		URL:    url,
+		Body:   io.NopCloser(strings.NewReader(body)),
+		Method: "POST",
+	}
+
+	Campaigns(decisionContext)(w, req)
+	resp = w.Result()
+
+	decisionResponseNormal = decision_response.DecisionResponse{}
+	data, err = io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = protojson.Unmarshal(data, &decisionResponseNormal)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(decisionResponseNormal.Campaigns))
 }

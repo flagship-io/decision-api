@@ -39,13 +39,13 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 		return
 	}
 
-	if handleRequest.DecisionRequest.GetFormatResponse() != nil && handleRequest.DecisionRequest.GetFormatResponse().GetValue() {
-		sendSingleFormatResponse(w, handleRequest.DecisionResponse.Campaigns[0], handleRequest.Logger)
+	if len(handleRequest.DecisionResponse.Campaigns) == 0 {
+		utils.WriteNoContent(w)
 		return
 	}
 
-	if len(handleRequest.DecisionResponse.Campaigns) == 0 {
-		utils.WriteNoContent(w)
+	if handleRequest.DecisionRequest.GetFormatResponse() != nil && handleRequest.DecisionRequest.GetFormatResponse().GetValue() {
+		sendSingleFormatResponse(w, handleRequest.DecisionResponse.Campaigns[0], handleRequest.Logger)
 		return
 	}
 

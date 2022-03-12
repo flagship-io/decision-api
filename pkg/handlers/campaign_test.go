@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -57,4 +58,17 @@ func TestCampaign(t *testing.T) {
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "image", resp.Header.Get("Content-Type"))
+
+	body = `{"visitor_id": "1234", "context": {}, "trigger_hit": false, "format_response": true }`
+	url, _ = url.Parse("/v2/campaigns/campaign_2")
+	req.URL = url
+	req.Body = io.NopCloser(strings.NewReader(body))
+	w = httptest.NewRecorder()
+
+	Campaign(utils.CreateMockDecisionContext())(w, req)
+
+	resp = w.Result()
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	assert.Equal(t, 204, resp.StatusCode)
+	assert.Equal(t, 0, len(bodyBytes))
 }
