@@ -35,8 +35,12 @@ var metrics *MetricsRegistry = &MetricsRegistry{
 }
 
 func Metrics(name string, handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	metrics.responseTimes[name] = gokitexpvar.NewHistogram(fmt.Sprintf("handlers.%s.response_time", name), 50)
-	metrics.errors[name] = gokitexpvar.NewCounter(fmt.Sprintf("handlers.%s.errors", name))
+	if _, ok := metrics.responseTimes[name]; !ok {
+		metrics.responseTimes[name] = gokitexpvar.NewHistogram(fmt.Sprintf("handlers.%s.response_time", name), 50)
+	}
+	if _, ok := metrics.errors[name]; !ok {
+		metrics.errors[name] = gokitexpvar.NewCounter(fmt.Sprintf("handlers.%s.errors", name))
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		lrw := NewLoggingResponseWriter(w)
