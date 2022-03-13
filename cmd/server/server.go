@@ -8,10 +8,12 @@ import (
 
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/server"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
+	"github.com/sirupsen/logrus"
 )
 
 var srv *server.Server
@@ -19,14 +21,21 @@ var lock = &sync.Mutex{}
 
 func createLogger(cfg *config.Config) *logger.Logger {
 	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
-	return logger.New(lvl, "server")
+	format := cfg.GetStringDefault("log_format", config.LoggerFormat)
+	log := logger.New(lvl, "server")
+
+	if format == "json" {
+		log.Logger.SetFormatter(&logrus.JSONFormatter{})
+	}
+	return log
 }
 
 func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error) {
-	logLvl := log.Level.String()
+	logLvl := log.Logger.Level.String()
 
 	// set the logger for common package
 	commonLogger := logger.New(logLvl, "common")
+	commonLogger.Logger.SetFormatter(log.Logger.Formatter)
 	common.SetLogger(&common.DefaultLogger{
 		Entry: commonLogger.Entry,
 	})
@@ -49,6 +58,10 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		),
 		server.WithHitsProcessor(hits_processors.NewDataCollectTracker(logLvl)),
 		server.WithAssignmentsManager(assignmentManager),
+		server.WithCorsOptions(&models.CorsOptions{
+			Enabled:        cfg.GetBool("cors_enabled"),
+			AllowedOrigins: cfg.GetStringDefault("cors_allowed_origins", config.ServerCorsAllowedOrigins),
+		}),
 	)
 }
 

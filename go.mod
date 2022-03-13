@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/flagship-io/flagship-common v0.0.17-beta.6
 	github.com/flagship-io/flagship-proto v0.0.14
+	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/prologic/bitcask v0.3.10
 	github.com/sirupsen/logrus v1.8.1
@@ -16,6 +17,7 @@ require (
 )
 
 require (
+	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 )
@@ -33,7 +35,6 @@ require (
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect

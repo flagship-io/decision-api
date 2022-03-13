@@ -17,9 +17,12 @@ func NewFromFilename(name string) (*Config, error) {
 	v.SetConfigFile(name)
 
 	v.SetDefault("address", ServerAddress)
+	v.SetDefault("cors_enabled", ServerCorsEnabled)
+	v.SetDefault("cors_allowed_origins", ServerCorsAllowedOrigins)
 	v.SetDefault("log_level", LoggerLevel)
+	v.SetDefault("log_format", LoggerFormat)
 	v.SetDefault("polling_interval", CDNLoaderPollingInterval)
-	v.SetDefault("cache_options_redishost", AddonCacheRedisAddr)
+	v.SetDefault("cache_options_redishost", RedisAddr)
 
 	// replace dot in key name by underscore
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

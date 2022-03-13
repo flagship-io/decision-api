@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"expvar"
 	"net/http"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/handlers"
+	"github.com/flagship-io/decision-api/pkg/handlers/middlewares"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -21,6 +24,8 @@ type ServerOptions struct {
 	environmentLoader  connectors.EnvironmentLoader
 	assignmentsManager connectors.AssignmentsManager
 	logger             *logger.Logger
+	corsOptions        *models.CorsOptions
+	recover            bool
 }
 
 type ServerOptionsBuilder func(*ServerOptions)
@@ -46,6 +51,18 @@ func WithAssignmentsManager(manager connectors.AssignmentsManager) ServerOptions
 func WithLogger(logger *logger.Logger) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
 		h.logger = logger
+	}
+}
+
+func WithCorsOptions(options *models.CorsOptions) ServerOptionsBuilder {
+	return func(h *ServerOptions) {
+		h.corsOptions = options
+	}
+}
+
+func WithRecover(enabled bool) ServerOptionsBuilder {
+	return func(h *ServerOptions) {
+		h.recover = enabled
 	}
 }
 
@@ -75,6 +92,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 		environmentLoader:  environment_loaders.NewCDNLoader(),
 		hitsProcessor:      hits_processors.NewDataCollectTracker("error"),
 		assignmentsManager: &assignments_managers.EmptyManager{},
+		recover:            true,
 	}
 
 	for _, opt := range opts {
@@ -123,11 +141,12 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/v2/campaigns", handlers.Campaigns(context))
-	mux.HandleFunc("/v2/campaigns/*", handlers.Campaign(context))
-	mux.HandleFunc("/v2/activate", handlers.Activate(context))
-	mux.HandleFunc("/v2/flags", handlers.Flags(context))
+	mux.HandleFunc("/v2/campaigns", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaigns", middlewares.Cors(serverOptions.corsOptions, handlers.Campaigns(context)))))
+	mux.HandleFunc("/v2/campaigns/*", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaign", middlewares.Cors(serverOptions.corsOptions, handlers.Campaign(context)))))
+	mux.HandleFunc("/v2/activate", middlewares.Recover(serverOptions.recover, middlewares.Metrics("activate", middlewares.Cors(serverOptions.corsOptions, handlers.Activate(context)))))
+	mux.HandleFunc("/v2/flags", middlewares.Recover(serverOptions.recover, middlewares.Metrics("flags", middlewares.Cors(serverOptions.corsOptions, handlers.Flags(context)))))
 	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
+	mux.HandleFunc("/v2/metrics", expvar.Handler().ServeHTTP)
 
 	server := &Server{
 		options: serverOptions,
