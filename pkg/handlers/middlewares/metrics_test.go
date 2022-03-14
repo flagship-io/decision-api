@@ -5,16 +5,22 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMetrics(t *testing.T) {
 	w := httptest.NewRecorder()
-	Metrics("test", func(w http.ResponseWriter, r *http.Request) {})(w, &http.Request{})
+	Metrics("test", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Millisecond)
+	})(w, &http.Request{})
 	w.Result()
 	assert.NotNil(t, metrics.responseTimes["test"])
-	assert.Equal(t, "0", expvar.Get("handlers.test.response_time.p50").String())
+	assert.Equal(t, "10", expvar.Get("handlers.test.response_time.p50").String())
+	assert.Equal(t, "10", expvar.Get("handlers.test.response_time.p90").String())
+	assert.Equal(t, "10", expvar.Get("handlers.test.response_time.p95").String())
+	assert.Equal(t, "10", expvar.Get("handlers.test.response_time.p99").String())
 
 	w = httptest.NewRecorder()
 	Metrics("test", func(w http.ResponseWriter, r *http.Request) {
