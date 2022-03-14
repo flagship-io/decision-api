@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -47,6 +48,8 @@ func Metrics(name string, handler func(http.ResponseWriter, *http.Request)) func
 		defer func(start time.Time) {
 			metrics.responseTimes[name].Observe(float64(time.Since(start).Milliseconds()))
 			if lrw.statusCode >= 500 {
+				log.Println("whyyyyyyyyyyy")
+				log.Println(lrw.statusCode)
 				metrics.errors[name].Add(1)
 			}
 		}(start)
