@@ -4,7 +4,6 @@ import (
 	"expvar"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,9 +14,7 @@ func TestMetrics(t *testing.T) {
 	Metrics("test", func(w http.ResponseWriter, r *http.Request) {})(w, &http.Request{})
 	w.Result()
 	assert.NotNil(t, metrics.responseTimes["test"])
-	v := reflect.ValueOf(metrics.responseTimes["test"])
-	p99 := reflect.Indirect(v).FieldByName("p99")
-	assert.False(t, p99.IsNil())
+	assert.Equal(t, "0", expvar.Get("handlers.test.response_time.p50").String())
 
 	w = httptest.NewRecorder()
 	Metrics("test", func(w http.ResponseWriter, r *http.Request) {
@@ -25,8 +22,5 @@ func TestMetrics(t *testing.T) {
 	})(w, &http.Request{})
 	w.Result()
 	assert.NotNil(t, metrics.errors["test"])
-	v = reflect.ValueOf(metrics.errors["test"])
-	f := reflect.Indirect(v).FieldByName("f")
-	expvarFloat := f.Convert(reflect.TypeOf(&expvar.Float{}))
-	assert.Equal(t, 1, expvarFloat.Float())
+	assert.Equal(t, "1", expvar.Get("handlers.test.errors").String())
 }
