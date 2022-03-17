@@ -11,10 +11,26 @@ import (
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDataCollect(t *testing.T) {
+func TestDataCollectBuilder(t *testing.T) {
+	httpClient := &http.Client{}
+	dc := NewDataCollectProcessor(
+		WithBatchOptions(50, time.Second),
+		WithLogLevel("debug"),
+		WithTrackingURL("https://tracking-url.dev"),
+		WithHTTPClient(httpClient))
+
+	assert.Equal(t, 50, dc.batchSize)
+	assert.Equal(t, time.Second, dc.batchingWindow)
+	assert.Equal(t, logrus.DebugLevel, dc.logger.Logger.Level)
+	assert.Equal(t, "https://tracking-url.dev", dc.trackingURL)
+	assert.Equal(t, httpClient, dc.httpClient)
+}
+
+func TestDataCollectTrack(t *testing.T) {
 	lock := &sync.Mutex{}
 	var bodySents []string
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -28,12 +44,12 @@ func TestDataCollect(t *testing.T) {
 	// Close the server when test finishes
 	defer server.Close()
 
-	dcTracker := NewDataCollectTracker("debug")
-	dcTracker.trackingURL = server.URL
-	dcTracker.batchSize = 2
+	dcProcessor := NewDataCollectProcessor()
+	dcProcessor.trackingURL = server.URL
+	dcProcessor.batchSize = 2
 	ts := time.Now().Add(-1 * time.Second).UnixMilli()
 
-	dcTracker.TrackHits(connectors.TrackingHits{
+	dcProcessor.TrackHits(connectors.TrackingHits{
 		CampaignActivations: []*models.CampaignActivation{{
 			EnvID:       "env_id",
 			CustomerID:  "customer_id",

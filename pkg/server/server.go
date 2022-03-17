@@ -30,9 +30,9 @@ type ServerOptions struct {
 
 type ServerOptionsBuilder func(*ServerOptions)
 
-func WithHitsProcessor(tracker connectors.HitsProcessor) ServerOptionsBuilder {
+func WithHitsProcessor(processor connectors.HitsProcessor) ServerOptionsBuilder {
 	return func(h *ServerOptions) {
-		h.hitsProcessor = tracker
+		h.hitsProcessor = processor
 	}
 }
 
@@ -90,7 +90,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	serverOptions := &ServerOptions{
 		logger:             logger.New("error", "server"),
 		environmentLoader:  environment_loaders.NewCDNLoader(),
-		hitsProcessor:      hits_processors.NewDataCollectTracker("error"),
+		hitsProcessor:      hits_processors.NewDataCollectProcessor(),
 		assignmentsManager: &assignments_managers.EmptyManager{},
 		recover:            true,
 	}

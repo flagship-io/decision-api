@@ -8,7 +8,7 @@ import (
 )
 
 func TestEmptyTrackHits(t *testing.T) {
-	tracker := &EmptyHitProcessor{}
-	err := tracker.TrackHits(connectors.TrackingHits{})
+	processor := &EmptyHitProcessor{}
+	err := processor.TrackHits(connectors.TrackingHits{})
 	assert.Nil(t, err)
 }

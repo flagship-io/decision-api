@@ -11,9 +11,11 @@ import (
 	"testing"
 
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestCampaign(t *testing.T) {
@@ -71,4 +73,72 @@ func TestCampaign(t *testing.T) {
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(t, 204, resp.StatusCode)
 	assert.Equal(t, 0, len(bodyBytes))
+}
+
+func TestSendSingleFormatResponse(t *testing.T) {
+	// json format
+	w := httptest.NewRecorder()
+	campaign := &decision_response.Campaign{
+		Variation: &decision_response.Variation{
+			Modifications: &decision_response.Modifications{
+				Type: decision_response.ModificationsType_HTML,
+				Value: &structpb.Struct{
+					Fields: map[string]*structpb.Value{},
+				},
+			},
+		},
+	}
+	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+
+	resp := w.Result()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+	body, _ := ioutil.ReadAll(resp.Body)
+	assert.Contains(t, string(body), `{"variation":`)
+
+	// other modification type returns json format
+	w = httptest.NewRecorder()
+	campaign.Variation.Modifications.Type = decision_response.ModificationsType_JSON
+	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+
+	resp = w.Result()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+	body, _ = ioutil.ReadAll(resp.Body)
+	assert.Contains(t, string(body), `{"variation":`)
+
+	// html type with single fields returns text/html with html value
+	w = httptest.NewRecorder()
+	campaign.Variation.Modifications.Type = decision_response.ModificationsType_HTML
+	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewStringValue("value")
+	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+
+	resp = w.Result()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "text/html", resp.Header.Get("Content-Type"))
+
+	body, _ = ioutil.ReadAll(resp.Body)
+	assert.Equal(t, "value", string(body))
+
+	// text type with single fields returns text/plain withs stringified bool value
+	w = httptest.NewRecorder()
+	campaign.Variation.Modifications.Type = decision_response.ModificationsType_TEXT
+	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewBoolValue(true)
+	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+
+	resp = w.Result()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "text/plain", resp.Header.Get("Content-Type"))
+
+	body, _ = ioutil.ReadAll(resp.Body)
+	assert.Equal(t, "true", string(body))
+
+	// text type with single fields returns text/plain withs stringified number value
+	w = httptest.NewRecorder()
+	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewNumberValue(20.5)
+	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+
+	resp = w.Result()
+	body, _ = ioutil.ReadAll(resp.Body)
+	assert.Equal(t, "20.5", string(body))
 }

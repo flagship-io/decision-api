@@ -56,7 +56,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 				environment_loaders.WithLogLevel(logLvl),
 				environment_loaders.WithPollingInterval(cfg.GetDuration("polling_interval"))),
 		),
-		server.WithHitsProcessor(hits_processors.NewDataCollectTracker(logLvl)),
+		server.WithHitsProcessor(hits_processors.NewDataCollectProcessor(hits_processors.WithLogLevel(logLvl))),
 		server.WithAssignmentsManager(assignmentManager),
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors_enabled"),

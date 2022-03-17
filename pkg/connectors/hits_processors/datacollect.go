@@ -17,6 +17,8 @@ import (
 const defaultBatchingWindow = time.Second * 30
 const defaultBatchSize = 50
 const defaultTrackingURL = "https://ariane.abtasty.com"
+const defaultLogLevel = "error"
+const logName = "DataCollect Processor"
 
 type batchHit struct {
 	Type       string                   `json:"t"`
@@ -24,25 +26,60 @@ type batchHit struct {
 	Hits       []map[string]interface{} `json:"h"`
 }
 
-type DataCollectTracker struct {
+type DataCollectProcessor struct {
 	batchingWindow time.Duration
 	batchSize      int
 	trackingURL    string
 	hits           []models.MappableHit
 	ticker         *time.Ticker
 	logger         *logger.Logger
+	httpClient     *http.Client
 }
 
-func NewDataCollectTracker(logLevel string) *DataCollectTracker {
-	tracker := &DataCollectTracker{
+type DatacollectOptionBuilder func(*DataCollectProcessor)
+
+func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOptionBuilder {
+	return func(l *DataCollectProcessor) {
+		l.batchSize = batchSize
+		l.batchingWindow = batchingWindow
+	}
+}
+
+func WithTrackingURL(url string) DatacollectOptionBuilder {
+	return func(l *DataCollectProcessor) {
+		l.trackingURL = url
+	}
+}
+
+func WithLogLevel(lvl string) DatacollectOptionBuilder {
+	return func(l *DataCollectProcessor) {
+		l.logger = logger.New(lvl, logName)
+	}
+}
+
+func WithHTTPClient(client *http.Client) DatacollectOptionBuilder {
+	return func(l *DataCollectProcessor) {
+		l.httpClient = client
+	}
+}
+
+func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProcessor {
+	processor := &DataCollectProcessor{
 		batchingWindow: defaultBatchingWindow,
 		batchSize:      defaultBatchSize,
 		hits:           []models.MappableHit{},
 		trackingURL:    defaultTrackingURL,
-		logger:         logger.New(logLevel, "DataCollect Tracker"),
+		logger:         logger.New(defaultLogLevel, logName),
+		httpClient: &http.Client{
+			Timeout: 2 * time.Second,
+		},
 	}
 
-	tracker.ticker = time.NewTicker(tracker.batchingWindow)
+	for _, o := range opts {
+		o(processor)
+	}
+
+	processor.ticker = time.NewTicker(processor.batchingWindow)
 	done := make(chan bool, 1)
 
 	sigs := make(chan os.Signal, 1)
@@ -51,10 +88,10 @@ func NewDataCollectTracker(logLevel string) *DataCollectTracker {
 		for {
 			select {
 			case <-done:
-				tracker.sendBatchHit()
+				processor.sendBatchHit()
 				os.Exit(0)
-			case <-tracker.ticker.C:
-				tracker.sendBatchHit()
+			case <-processor.ticker.C:
+				processor.sendBatchHit()
 			}
 		}
 	}()
@@ -65,10 +102,10 @@ func NewDataCollectTracker(logLevel string) *DataCollectTracker {
 		done <- true
 	}()
 
-	return tracker
+	return processor
 }
 
-func (d *DataCollectTracker) sendBatchHit() {
+func (d *DataCollectProcessor) sendBatchHit() {
 	if len(d.hits) == 0 {
 		return
 	}
@@ -96,7 +133,7 @@ func (d *DataCollectTracker) sendBatchHit() {
 		d.logger.Errorf("error when marshaling batch hit: %v", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := d.httpClient.Do(req)
 
 	if err != nil {
 		d.logger.Errorf("error when sending batch hit: %v", err)
@@ -112,7 +149,7 @@ func (d *DataCollectTracker) sendBatchHit() {
 	d.hits = []models.MappableHit{}
 }
 
-func (d *DataCollectTracker) TrackHits(hits connectors.TrackingHits) error {
+func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
 	mappableHits := []models.MappableHit{}
 	for _, ca := range hits.CampaignActivations {
 		mappableHits = append(mappableHits, ca)

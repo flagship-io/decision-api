@@ -58,11 +58,7 @@ func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decisio
 		utils.WriteServerError(w, err)
 		return
 	}
-	_, err = w.Write(data)
-
-	if err != nil {
-		logger.Errorf("error when writing data: %v", err)
-	}
+	utils.WriteJSONStringOk(w, string(data))
 }
 
 func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign, logger *logger.Logger) {
@@ -97,7 +93,7 @@ func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *d
 	case (*structpb.Value_BoolValue):
 		dataValue = strconv.FormatBool(value.GetBoolValue())
 	case (*structpb.Value_NumberValue):
-		dataValue = strconv.FormatFloat(value.GetNumberValue(), 'E', -1, 64)
+		dataValue = strconv.FormatFloat(value.GetNumberValue(), 'f', -1, 64)
 	}
 
 	w.Header().Add("Content-Type", contentType)

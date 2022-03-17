@@ -66,10 +66,6 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 	for _, c := range decisionResponse.Campaigns {
 		if c.GetVariation() != nil && c.GetVariation().GetModifications() != nil && c.GetVariation().GetModifications().GetValue() != nil && c.GetVariation().GetModifications().GetValue().GetFields() != nil {
 			for k, v := range c.GetVariation().GetModifications().GetValue().GetFields() {
-				_, exists := flagInfos.Flags[k]
-				if exists {
-					continue
-				}
 				flagInfos.Flags[k] = &flags.FlagInfo{
 					Value: v,
 					Metadata: &flags.FlagMetadata{
