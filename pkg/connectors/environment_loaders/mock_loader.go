@@ -1,17 +1,17 @@
 package environment_loaders
 
 import (
-	common "github.com/flagship-io/flagship-common"
+	"github.com/flagship-io/decision-api/pkg/models"
 )
 
 type MockLoader struct {
-	MockedEnvironment *common.Environment
+	MockedEnvironment *models.Environment
 }
 
 func (loader *MockLoader) Init(envID string, APIKey string) error {
 	return nil
 }
 
-func (l *MockLoader) LoadEnvironment(envID string, APIKey string) (*common.Environment, error) {
+func (l *MockLoader) LoadEnvironment(envID string, APIKey string) (*models.Environment, error) {
 	return l.MockedEnvironment, nil
 }

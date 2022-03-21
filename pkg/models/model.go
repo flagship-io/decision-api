@@ -1,6 +1,15 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	common "github.com/flagship-io/flagship-common"
+)
+
+type Environment struct {
+	Common          *common.Environment
+	HasIntegrations bool
+}
 
 type MappableHit interface {
 	ToMap() map[string]interface{}

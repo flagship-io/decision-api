@@ -22,7 +22,7 @@ type Request struct {
 	DecisionContext    *connectors.DecisionContext
 	DecisionResponse   *decision_response.DecisionResponse
 	FullVisitorContext *targeting.Context
-	Environment        *common.Environment
+	Environment        *models.Environment
 	CampaignID         string
 	Mode               string
 	Extras             []string
@@ -73,7 +73,7 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			DecisionGroup: handleRequest.DecisionRequest.DecisionGroup.GetValue(),
 			Context:       handleRequest.FullVisitorContext,
 		},
-		*handleRequest.Environment,
+		*handleRequest.Environment.Common,
 		common.DecisionOptions{
 			TriggerHit:    shouldTriggerHit(handleRequest.DecisionRequest),
 			CampaignID:    handleRequest.CampaignID,

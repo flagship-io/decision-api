@@ -9,7 +9,7 @@ import (
 	"github.com/flagship-io/decision-api/internal/handle"
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
-	common "github.com/flagship-io/flagship-common"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -35,10 +35,10 @@ func Campaigns(context *connectors.DecisionContext) func(http.ResponseWriter, *h
 	}
 }
 
-func toAccountSettings(e *common.Environment) *decision_response.AccountSettings {
+func toAccountSettings(e *models.Environment) *decision_response.AccountSettings {
 	return &decision_response.AccountSettings{
-		EnabledXPC:  e.UseReconciliation,
-		Enabled1V1T: e.SingleAssignment,
+		EnabledXPC:  e.Common.UseReconciliation,
+		Enabled1V1T: e.Common.SingleAssignment,
 	}
 }
 

@@ -43,7 +43,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	// 2. Checks that optional campaign ID exists
 	if handleRequest.CampaignID != "" {
 		filteredCampaigns := []*common.Campaign{}
-		for _, v := range handleRequest.Environment.Campaigns {
+		for _, v := range handleRequest.Environment.Common.Campaigns {
 			if v.ID == handleRequest.CampaignID || (v.Slug != nil && *v.Slug == handleRequest.CampaignID) {
 				filteredCampaigns = append(filteredCampaigns, v)
 				break
@@ -54,24 +54,17 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 			utils.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("The campaign %s is paused or doesn’t exist. Verify your customId or campaignId.", handleRequest.CampaignID))
 			return
 		}
-		handleRequest.Environment.Campaigns = filteredCampaigns
+		handleRequest.Environment.Common.Campaigns = filteredCampaigns
 	}
 
 	// 3. Return panic response is panic mode activated
-	if handleRequest.Environment.IsPanic {
+	if handleRequest.Environment.Common.IsPanic {
 		utils.WritePanicResponse(w, handleRequest.DecisionRequest.VisitorId)
 		return
 	}
 
 	// 4 Get context keys from integration service (if needed)
-	hasIntegrationTargeting := false
-	for _, c := range handleRequest.Environment.Campaigns {
-		if c.HasIntegrationProviderTargeting() {
-			hasIntegrationTargeting = true
-			break
-		}
-	}
-	if hasIntegrationTargeting {
+	if handleRequest.Environment.HasIntegrations {
 		tracker.TimeTrack("start get visitor context from integration service")
 		decisionContext.Logger.Info("filling integration visitor context")
 		err := fillVisitorContext(handleRequest)

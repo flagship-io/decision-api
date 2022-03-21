@@ -32,7 +32,7 @@ type HitsProcessor interface {
 
 type EnvironmentLoader interface {
 	Init(envID string, APIKey string) error
-	LoadEnvironment(envID string, APIKey string) (*common.Environment, error)
+	LoadEnvironment(envID string, APIKey string) (*models.Environment, error)
 }
 
 type CacheLevel int64

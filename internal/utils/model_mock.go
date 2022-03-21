@@ -5,6 +5,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/decision_response"
@@ -118,24 +119,27 @@ func CreateMockDecisionContext() *connectors.DecisionContext {
 			HitsProcessor:      &hits_processors.MockHitProcessor{},
 			AssignmentsManager: assignments_managers.InitMemoryManager(),
 			EnvironmentLoader: &environment_loaders.MockLoader{
-				MockedEnvironment: &common.Environment{
-					Campaigns: []*common.Campaign{
-						CreateABCampaignMock(
-							"campaign_1",
-							"vg_2",
-							CreateAllUsersTargetingMock(),
-							modifications),
-						CreateABCampaignMock(
-							"image",
-							"vg_1",
-							CreateAllUsersTargetingMock(),
-							CreateModification("image", "http://image.jpeg", decision_response.ModificationsType_IMAGE)),
-						CreateABCampaignMock(
-							"campaign_2",
-							"vg_3",
-							CreateTargetingWithProvider(),
-							modifications),
+				MockedEnvironment: &models.Environment{
+					Common: &common.Environment{
+						Campaigns: []*common.Campaign{
+							CreateABCampaignMock(
+								"campaign_1",
+								"vg_2",
+								CreateAllUsersTargetingMock(),
+								modifications),
+							CreateABCampaignMock(
+								"image",
+								"vg_1",
+								CreateAllUsersTargetingMock(),
+								CreateModification("image", "http://image.jpeg", decision_response.ModificationsType_IMAGE)),
+							CreateABCampaignMock(
+								"campaign_2",
+								"vg_3",
+								CreateTargetingWithProvider(),
+								modifications),
+						},
 					},
+					HasIntegrations: true,
 				},
 			},
 		},

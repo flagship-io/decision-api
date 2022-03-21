@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-proto/bucketing"
@@ -30,7 +31,7 @@ type CDNLoader struct {
 	lastModified      string
 	timeout           time.Duration
 	pollingInternal   time.Duration
-	loadedEnvironment *common.Environment
+	loadedEnvironment *models.Environment
 	logger            *logger.Logger
 	lock              *sync.RWMutex
 }
@@ -157,13 +158,16 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	}
 
 	l.lock.Lock()
-	l.loadedEnvironment = &common.Environment{
-		ID:                envID,
-		Campaigns:         campaigns,
-		IsPanic:           conf.Panic,
-		SingleAssignment:  conf.AccountSettings.Enabled1V1T,
-		UseReconciliation: conf.AccountSettings.EnabledXPC || conf.VisitorConsolidation,
-		CacheEnabled:      true,
+	l.loadedEnvironment = &models.Environment{
+		Common: &common.Environment{
+			ID:                envID,
+			Campaigns:         campaigns,
+			IsPanic:           conf.Panic,
+			SingleAssignment:  conf.AccountSettings.Enabled1V1T,
+			UseReconciliation: conf.AccountSettings.EnabledXPC || conf.VisitorConsolidation,
+			CacheEnabled:      true,
+		},
+		HasIntegrations: false,
 	}
 	l.lastModified = resp.Header.Get("Last-Modified")
 	l.lock.Unlock()
@@ -224,7 +228,7 @@ func campaignToCommonStruct(c *bucketing.Bucketing_BucketingCampaign) *common.Ca
 	}
 }
 
-func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*common.Environment, error) {
+func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*models.Environment, error) {
 	l.lock.RLock()
 	defer l.lock.RUnlock()
 	if l.loadedEnvironment == nil {

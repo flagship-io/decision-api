@@ -6,6 +6,7 @@ import (
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/flagship-common/targeting"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -109,7 +110,7 @@ func TestDecision(t *testing.T) {
 			Standard:             map[string]*structpb.Value{},
 			IntegrationProviders: make(map[string]targeting.ContextMap),
 		},
-		Environment: &clientInfos,
+		Environment: &models.Environment{Common: &clientInfos},
 	}
 
 	// Check that at first view, only 1 ab test is returned
@@ -161,7 +162,7 @@ func TestDecision1Vis1Test(t *testing.T) {
 			Standard:             map[string]*structpb.Value{},
 			IntegrationProviders: make(map[string]targeting.ContextMap),
 		},
-		Environment: &clientInfos,
+		Environment: &models.Environment{Common: &clientInfos},
 	}
 
 	// Check that at first view, only 1 ab test is returned
@@ -205,7 +206,7 @@ func TestDecisionNoReconciliation(t *testing.T) {
 		SingleAssignment:  false,
 		UseReconciliation: false,
 	}
-	handleRequest.Environment = &clientInfos
+	handleRequest.Environment = &models.Environment{Common: &clientInfos}
 
 	err := Decision(&handleRequest, nil)
 	assert.Nil(t, err)
@@ -265,7 +266,7 @@ func TestDecisionReconciliation(t *testing.T) {
 		UseReconciliation: true,
 		CacheEnabled:      true,
 	}
-	handleRequest.Environment = &clientInfos
+	handleRequest.Environment = &models.Environment{Common: &clientInfos}
 
 	err := Decision(&handleRequest, nil)
 	assert.Nil(t, err)
