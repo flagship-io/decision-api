@@ -68,3 +68,14 @@ type activateBody struct {
 type errorMessage struct {
 	Message string `json:"message"`
 }
+
+// nolint
+type MetricsResponse struct {
+	Cmdline               []string               `json:"cmdline"`
+	Memstats              map[string]interface{} `json:"memstats"`
+	HandlerErrors         float64                `json:"handlers.[name].errors"`
+	HandlerResponseTime50 float64                `json:"handlers.[name].response_time.p50"`
+	HandlerResponseTime90 float64                `json:"handlers.[name].response_time.p90"`
+	HandlerResponseTime95 float64                `json:"handlers.[name].response_time.p95"`
+	HandlerResponseTime99 float64                `json:"handlers.[name].response_time.p99"`
+}

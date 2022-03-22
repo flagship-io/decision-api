@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -35,6 +34,14 @@ var metrics *MetricsRegistry = &MetricsRegistry{
 	errors:        make(map[string]*gokitexpvar.Counter),
 }
 
+// Metrics returns the current metrics for the running API
+// @Summary Get the current metrics for the running server
+// @Tags Metrics
+// @Description Gets the metrics like memory consumption & allocation as well as response time histograms to use with monitoring tools
+// @ID metrics
+// @Produce  json
+// @Success 200 {object} handlers.MetricsResponse
+// @Router /metrics [get]
 func Metrics(name string, handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	if _, ok := metrics.responseTimes[name]; !ok {
 		metrics.responseTimes[name] = gokitexpvar.NewHistogram(fmt.Sprintf("handlers.%s.response_time", name), 50)
@@ -48,8 +55,6 @@ func Metrics(name string, handler func(http.ResponseWriter, *http.Request)) func
 		defer func(start time.Time) {
 			metrics.responseTimes[name].Observe(float64(time.Since(start).Milliseconds()))
 			if lrw.statusCode >= 500 {
-				log.Println("whyyyyyyyyyyy")
-				log.Println(lrw.statusCode)
 				metrics.errors[name].Add(1)
 			}
 		}(start)

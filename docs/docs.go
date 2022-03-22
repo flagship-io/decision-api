@@ -218,6 +218,27 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/metrics": {
+            "get": {
+                "description": "Gets the metrics like memory consumption \u0026 allocation as well as response time histograms to use with monitoring tools",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Get the current metrics for the running server",
+                "operationId": "metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MetricsResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -252,6 +273,36 @@ const docTemplate = `{
                 },
                 "variationId": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.MetricsResponse": {
+            "type": "object",
+            "properties": {
+                "cmdline": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "handlers.[name].errors": {
+                    "type": "number"
+                },
+                "handlers.[name].response_time.p50": {
+                    "type": "number"
+                },
+                "handlers.[name].response_time.p90": {
+                    "type": "number"
+                },
+                "handlers.[name].response_time.p95": {
+                    "type": "number"
+                },
+                "handlers.[name].response_time.p99": {
+                    "type": "number"
+                },
+                "memstats": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
