@@ -22,6 +22,26 @@ definitions:
       variationId:
         type: string
     type: object
+  handlers.MetricsResponse:
+    properties:
+      cmdline:
+        items:
+          type: string
+        type: array
+      handlers.[name].errors:
+        type: number
+      handlers.[name].response_time.p50:
+        type: number
+      handlers.[name].response_time.p90:
+        type: number
+      handlers.[name].response_time.p95:
+        type: number
+      handlers.[name].response_time.p99:
+        type: number
+      memstats:
+        additionalProperties: true
+        type: object
+    type: object
   handlers.activateBody:
     properties:
       aid:
@@ -245,4 +265,19 @@ paths:
       summary: Get all flags
       tags:
       - Flags
+  /metrics:
+    get:
+      description: Gets the metrics like memory consumption & allocation as well as
+        response time histograms to use with monitoring tools
+      operationId: metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MetricsResponse'
+      summary: Get the current metrics for the running server
+      tags:
+      - Metrics
 swagger: "2.0"
