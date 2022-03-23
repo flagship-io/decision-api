@@ -154,9 +154,8 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			Addr:         addr,
-			Handler:      mux,
-		},
-	}
+			Handler:      middlewares.RequestLogger(serverOptions.logger, mux),
+		}}
 
 	return server, nil
 }

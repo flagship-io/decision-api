@@ -40,7 +40,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		Entry: commonLogger.Entry,
 	})
 
-	log.Infof("creating assignment cache manager from configuration")
+	log.Info("initializing assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)
 	if err != nil {
 		log.Fatalf("error occured when initializing assignment cache manager: %v", err)

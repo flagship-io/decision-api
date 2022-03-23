@@ -79,6 +79,7 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 		o(processor)
 	}
 
+	processor.logger.Info("initializing datacollect hits processor")
 	processor.ticker = time.NewTicker(processor.batchingWindow)
 	done := make(chan bool, 1)
 

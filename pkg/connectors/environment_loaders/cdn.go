@@ -88,7 +88,7 @@ func (loader *CDNLoader) Init(envID string, APIKey string) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	loader.logger.Info("initialize CDN loader")
+	loader.logger.Info("initializing CDN environment loader")
 
 	go func() {
 		for {

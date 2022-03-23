@@ -28,6 +28,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 
 	// 1. Get environment info from environment ID & API Key
 	tracker.TimeTrack("start get env info from env loader")
+	handleRequest.Logger.Infof("loading environment id: %s", handleRequest.DecisionContext.EnvID)
 	handleRequest.Environment, err = decisionContext.EnvironmentLoader.LoadEnvironment(handleRequest.DecisionContext.EnvID, handleRequest.DecisionContext.APIKey)
 	tracker.TimeTrack("end get env info from env loader")
 
@@ -42,6 +43,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 
 	// 2. Checks that optional campaign ID exists
 	if handleRequest.CampaignID != "" {
+		handleRequest.Logger.Infof("checking campaign exists with id: %s", handleRequest.CampaignID)
 		filteredCampaigns := []*common.Campaign{}
 		for _, v := range handleRequest.Environment.Common.Campaigns {
 			if v.ID == handleRequest.CampaignID || (v.Slug != nil && *v.Slug == handleRequest.CampaignID) {
@@ -84,6 +86,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 			defer wg.Done()
 
 			tracker.TimeTrack("start track visitor context")
+			handleRequest.Logger.Info("sending visitor context to hits processor")
 			SendVisitorContext(handleRequest)
 			tracker.TimeTrack("end track visitor context")
 		}()
@@ -93,6 +96,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		defer wg.Done()
 
 		tracker.TimeTrack("start compute campaigns request logic")
+		handleRequest.Logger.Info("computing campaigns decision for visitor ID and context")
 		err = handle.Decision(handleRequest, tracker)
 		if err == nil {
 			handleDecision(w, handleRequest, err)

@@ -48,6 +48,7 @@ func requestCampaignsHandler(w http.ResponseWriter, handleRequest *handle.Reques
 		return
 	}
 
+	handleRequest.Logger.Infof("formatting campaign response for mode %s", handleRequest.Mode)
 	var response = decision_response.DecisionResponseFull{}
 	needAggregatedResponse := handleRequest.Mode == "simple" || handleRequest.Mode == "full"
 	response.Campaigns = handleRequest.DecisionResponse.Campaigns
