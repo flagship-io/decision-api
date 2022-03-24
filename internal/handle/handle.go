@@ -33,13 +33,14 @@ type Request struct {
 }
 
 func NewRequestFromHTTP(req *http.Request) Request {
-	campaign_id := strings.TrimPrefix(req.URL.Path, "/v2/campaigns/")
-	if campaign_id == req.URL.Path {
-		campaign_id = ""
+	campaignInfos := strings.Split(req.URL.Path, "/campaigns/")
+	campaignId := ""
+	if len(campaignInfos) == 2 {
+		campaignId = campaignInfos[1]
 	}
 	return Request{
 		Time:       time.Now(),
-		CampaignID: campaign_id,
+		CampaignID: campaignId,
 		Extras:     []string{},
 	}
 }

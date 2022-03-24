@@ -142,7 +142,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/v2/campaigns", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaigns", middlewares.Cors(serverOptions.corsOptions, handlers.Campaigns(context)))))
-	mux.HandleFunc("/v2/campaigns/*", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaign", middlewares.Cors(serverOptions.corsOptions, handlers.Campaign(context)))))
+	mux.HandleFunc("/v2/campaigns/", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaign", middlewares.Cors(serverOptions.corsOptions, handlers.Campaign(context)))))
 	mux.HandleFunc("/v2/activate", middlewares.Recover(serverOptions.recover, middlewares.Metrics("activate", middlewares.Cors(serverOptions.corsOptions, handlers.Activate(context)))))
 	mux.HandleFunc("/v2/flags", middlewares.Recover(serverOptions.recover, middlewares.Metrics("flags", middlewares.Cors(serverOptions.corsOptions, handlers.Flags(context)))))
 	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
