@@ -20,8 +20,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const defaultBaseURL = "https://cdn.flagship.io"
-const defaultTimeout = time.Second * 2
+const defaultBaseURL = "https://cdn-staging.flagship.io"
+const defaultTimeout = time.Second * 5
 const defaultPollingInterval = time.Second * 5
 const logName = "CDN Loader"
 
@@ -231,9 +231,24 @@ func campaignToCommonStruct(c *bucketing.Bucketing_BucketingCampaign) *common.Ca
 func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*models.Environment, error) {
 	l.lock.RLock()
 	defer l.lock.RUnlock()
+
+	var err error
 	if l.loadedEnvironment == nil {
-		err := l.fetchEnvironment(envID, APIKey)
-		return l.loadedEnvironment, err
+		err = l.fetchEnvironment(envID, APIKey)
 	}
-	return l.loadedEnvironment, nil
+
+	// create a new environment to prevent reference modifications
+	environment := &models.Environment{
+		Common: &common.Environment{
+			ID:                envID,
+			Campaigns:         make([]*common.Campaign, len(l.loadedEnvironment.Common.Campaigns)),
+			IsPanic:           l.loadedEnvironment.Common.IsPanic,
+			SingleAssignment:  l.loadedEnvironment.Common.SingleAssignment,
+			UseReconciliation: l.loadedEnvironment.Common.UseReconciliation,
+			CacheEnabled:      l.loadedEnvironment.Common.CacheEnabled,
+		},
+		HasIntegrations: l.loadedEnvironment.HasIntegrations,
+	}
+	copy(environment.Common.Campaigns, l.loadedEnvironment.Common.Campaigns)
+	return environment, err
 }
