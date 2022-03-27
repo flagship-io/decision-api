@@ -56,7 +56,8 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 			utils.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("The campaign %s is paused or doesn’t exist. Verify your customId or campaignId.", handleRequest.CampaignID))
 			return
 		}
-		handleRequest.Environment.Common.Campaigns = filteredCampaigns
+		// Use copy to not change the environment reference in the environment loader
+		copy(handleRequest.Environment.Common.Campaigns, filteredCampaigns)
 	}
 
 	// 3. Return panic response is panic mode activated

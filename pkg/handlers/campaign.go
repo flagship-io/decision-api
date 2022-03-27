@@ -44,6 +44,12 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 		return
 	}
 
+	// If no campaign ID defined, return the default campaigns response
+	if handleRequest.CampaignID == "" {
+		requestCampaignsHandler(w, handleRequest, err)
+		return
+	}
+
 	if handleRequest.DecisionRequest.GetFormatResponse() != nil && handleRequest.DecisionRequest.GetFormatResponse().GetValue() {
 		sendSingleFormatResponse(w, handleRequest.DecisionResponse.Campaigns[0], handleRequest.Logger)
 		return
