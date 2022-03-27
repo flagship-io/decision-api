@@ -59,7 +59,9 @@ func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request
 }
 
 func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign, logger *logger.Logger) {
-	data, err := protojson.Marshal(campaignDecisionResponse)
+	var ma protojson.MarshalOptions
+	ma.EmitUnpopulated = true
+	data, err := ma.Marshal(campaignDecisionResponse)
 	if err != nil {
 		utils.WriteServerError(w, err)
 		return
