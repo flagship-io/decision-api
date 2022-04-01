@@ -94,7 +94,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 	body, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(t, string(body), `{"variation":`)
+	assert.Contains(t, string(body), `"variation":`)
 
 	// other modification type returns json format
 	w = httptest.NewRecorder()
@@ -105,7 +105,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 	body, _ = ioutil.ReadAll(resp.Body)
-	assert.Contains(t, string(body), `{"variation":`)
+	assert.Contains(t, string(body), `"variation":`)
 
 	// html type with single fields returns text/html with html value
 	w = httptest.NewRecorder()

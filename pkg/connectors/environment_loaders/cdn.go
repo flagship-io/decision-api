@@ -20,7 +20,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const defaultBaseURL = "https://cdn-staging.flagship.io"
+const defaultBaseURL = "https://cdn.flagship.io"
 const defaultTimeout = time.Second * 5
 const defaultPollingInterval = time.Second * 5
 const logName = "CDN Loader"

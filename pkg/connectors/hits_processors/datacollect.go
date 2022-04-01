@@ -3,9 +3,11 @@ package hits_processors
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -21,9 +23,10 @@ const defaultLogLevel = "error"
 const logName = "DataCollect Processor"
 
 type batchHit struct {
-	Type       string                   `json:"t"`
-	DataSource string                   `json:"ds"`
-	Hits       []map[string]interface{} `json:"h"`
+	Type            string                   `json:"t"`
+	DataSource      string                   `json:"ds"`
+	Hits            []map[string]interface{} `json:"h"`
+	CustomVariables map[string]string        `json:"cv"`
 }
 
 type DataCollectProcessor struct {
@@ -121,6 +124,11 @@ func (d *DataCollectProcessor) sendBatchHit() {
 		Type:       "BATCH",
 		DataSource: "APP",
 		Hits:       hits,
+		CustomVariables: map[string]string{
+			"0": "runner, self-hosted",
+			"1": fmt.Sprintf("version, %s", models.Version),
+			"2": fmt.Sprintf("go-version, %s", runtime.Version()),
+		},
 	}
 
 	json_data, err := json.Marshal(batchHit)
