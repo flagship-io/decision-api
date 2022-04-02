@@ -237,18 +237,11 @@ func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*models.Enviro
 		err = l.fetchEnvironment(envID, APIKey)
 	}
 
-	// create a new environment to prevent reference modifications
-	environment := &models.Environment{
-		Common: &common.Environment{
-			ID:                envID,
-			Campaigns:         make([]*common.Campaign, len(l.loadedEnvironment.Common.Campaigns)),
-			IsPanic:           l.loadedEnvironment.Common.IsPanic,
-			SingleAssignment:  l.loadedEnvironment.Common.SingleAssignment,
-			UseReconciliation: l.loadedEnvironment.Common.UseReconciliation,
-			CacheEnabled:      l.loadedEnvironment.Common.CacheEnabled,
-		},
-		HasIntegrations: l.loadedEnvironment.HasIntegrations,
-	}
-	copy(environment.Common.Campaigns, l.loadedEnvironment.Common.Campaigns)
-	return environment, err
+	// copy loaded environment to prevent campaigns slice reference modification
+	environment := *l.loadedEnvironment
+	commonEnv := *l.loadedEnvironment.Common
+	commonEnv.Campaigns = make([]*common.Campaign, len(l.loadedEnvironment.Common.Campaigns))
+	copy(commonEnv.Campaigns, l.loadedEnvironment.Common.Campaigns)
+	environment.Common = &commonEnv
+	return &environment, err
 }
