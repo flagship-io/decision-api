@@ -98,9 +98,10 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		tracker.TimeTrack("start compute campaigns request logic")
 		handleRequest.Logger.Info("computing campaigns decision for visitor ID and context")
 		err = handle.Decision(handleRequest, tracker)
-		if err == nil {
-			handleDecision(w, handleRequest, err)
+		if err != nil {
+			handleRequest.Logger.Warnf("error when computing decision: %v", err)
 		}
+		handleDecision(w, handleRequest, err)
 		tracker.TimeTrack("end compute campaigns request logic")
 	}()
 

@@ -29,8 +29,8 @@ func WriteServerError(w http.ResponseWriter, err error) {
 // WriteClientError similarly add a helper for send responses relating to client errors.
 func WriteClientError(w http.ResponseWriter, status int, message string) {
 	body := &ClientErrorMessage{Message: message}
-	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	jsonErr := json.NewEncoder(w).Encode(body)
 	if jsonErr != nil {
 		log.Printf("error when encoding body: %v", jsonErr)
@@ -48,8 +48,8 @@ func WriteJSONStringOk(w http.ResponseWriter, data string) {
 
 // WriteJSONOk similarly add a helper to send json responses with status OK.
 func WriteJSONOk(w http.ResponseWriter, data interface{}) {
-	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 	err := json.NewEncoder(w).Encode(data)
 
 	if err != nil {
