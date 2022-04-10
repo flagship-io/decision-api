@@ -160,6 +160,16 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	return server, nil
 }
 
-func (s *Server) Shutdown(context context.Context) error {
-	return s.httpServer.Shutdown(context)
+func (s *Server) Shutdown(ctx context.Context) {
+	s.options.logger.Info("shutting server down")
+	err := s.httpServer.Shutdown(ctx)
+	if err != nil {
+		s.options.logger.Errorf("error when shutting server down: %v", err)
+	}
+
+	s.options.logger.Info("cleaning remaining hits")
+	err = s.options.hitsProcessor.Shutdown(ctx)
+	if err != nil {
+		s.options.logger.Errorf("error when shutting server down: %v", err)
+	}
 }

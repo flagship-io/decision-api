@@ -122,7 +122,8 @@ func TestCampaigns(t *testing.T) {
 			},
 		}
 		json, _ := json.Marshal(rows)
-		rw.Write(json)
+		_, err := rw.Write(json)
+		assert.Nil(t, err)
 	}))
 	// Close the server when test finishes
 	defer server.Close()

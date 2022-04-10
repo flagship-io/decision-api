@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/models"
@@ -83,31 +80,15 @@ func NewCDNLoader(opts ...CDNLoaderOptionBuilder) *CDNLoader {
 
 func (loader *CDNLoader) Init(envID string, APIKey string) error {
 	ticker := time.NewTicker(loader.pollingInternal)
-	done := make(chan bool, 1)
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
 	loader.logger.Info("initializing CDN environment loader")
 
 	go func() {
-		for {
-			select {
-			case <-done:
-				os.Exit(0)
-			case <-ticker.C:
-				err := loader.fetchEnvironment(envID, APIKey)
-				if err != nil {
-					loader.logger.Errorf("error when fetching environment: %v", err)
-				}
+		for range ticker.C {
+			err := loader.fetchEnvironment(envID, APIKey)
+			if err != nil {
+				loader.logger.Errorf("error when fetching environment: %v", err)
 			}
 		}
-	}()
-
-	go func() {
-		// When receiving sigterm signal, send an event to the done channel
-		<-sigs
-		done <- true
 	}()
 
 	return loader.fetchEnvironment(envID, APIKey)

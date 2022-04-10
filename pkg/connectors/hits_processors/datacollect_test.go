@@ -38,7 +38,8 @@ func TestDataCollectTrack(t *testing.T) {
 		lock.Lock()
 		lastBodySent, _ := ioutil.ReadAll(req.Body)
 		bodySents = append(bodySents, string(lastBodySent))
-		rw.Write([]byte("{}"))
+		_, err := rw.Write([]byte("{}"))
+		assert.Nil(t, err)
 		lock.Unlock()
 	}))
 	// Close the server when test finishes
@@ -49,7 +50,7 @@ func TestDataCollectTrack(t *testing.T) {
 	dcProcessor.batchSize = 2
 	ts := time.Now().Add(-1 * time.Second).UnixMilli()
 
-	dcProcessor.TrackHits(connectors.TrackingHits{
+	err := dcProcessor.TrackHits(connectors.TrackingHits{
 		CampaignActivations: []*models.CampaignActivation{{
 			EnvID:       "env_id",
 			CustomerID:  "customer_id",
@@ -68,10 +69,11 @@ func TestDataCollectTrack(t *testing.T) {
 		}},
 	})
 
+	assert.Nil(t, err)
 	assert.Equal(t, 1, len(bodySents))
 
 	batch := &batchHit{}
-	err := json.Unmarshal([]byte(bodySents[0]), batch)
+	err = json.Unmarshal([]byte(bodySents[0]), batch)
 	assert.Nil(t, err)
 	assert.Equal(t, "BATCH", batch.Type)
 	assert.Equal(t, "APP", batch.DataSource)

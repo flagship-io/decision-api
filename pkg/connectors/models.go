@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"context"
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/models"
@@ -28,6 +29,7 @@ type TrackingHits struct {
 
 type HitsProcessor interface {
 	TrackHits(hits TrackingHits) error
+	Shutdown(context.Context) error
 }
 
 type EnvironmentLoader interface {

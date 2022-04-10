@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 
@@ -40,10 +40,9 @@ func TestMain(t *testing.T) {
 	os.Setenv("ENV_ID", "env_id")
 	go func() {
 		time.Sleep(2 * time.Second)
-		lock.Lock()
-		err := srv.Shutdown(context.Background())
+		err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Nil(t, err)
-		lock.Unlock()
 	}()
+
 	main()
 }

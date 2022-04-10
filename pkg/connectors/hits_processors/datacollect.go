@@ -2,13 +2,11 @@ package hits_processors
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
@@ -84,34 +82,23 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 
 	processor.logger.Info("initializing datacollect hits processor")
 	processor.ticker = time.NewTicker(processor.batchingWindow)
-	done := make(chan bool, 1)
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		for {
-			select {
-			case <-done:
-				processor.sendBatchHit()
-				os.Exit(0)
-			case <-processor.ticker.C:
-				processor.sendBatchHit()
+		for range processor.ticker.C {
+			err := processor.sendBatchHit(context.Background())
+			if err != nil {
+				processor.logger.Errorf("error when sending batch hit: %v", err)
 			}
 		}
-	}()
-
-	go func() {
-		// When receiving sigterm signal, send an event to the done channel
-		<-sigs
-		done <- true
 	}()
 
 	return processor
 }
 
-func (d *DataCollectProcessor) sendBatchHit() {
+func (d *DataCollectProcessor) sendBatchHit(ctx context.Context) error {
 	if len(d.hits) == 0 {
-		return
+		d.logger.Info("no hits to send")
+		return nil
 	}
 
 	hits := []map[string]interface{}{}
@@ -133,11 +120,12 @@ func (d *DataCollectProcessor) sendBatchHit() {
 
 	json_data, err := json.Marshal(batchHit)
 	if err != nil {
-		d.logger.Errorf("error when marshaling batch hit: %v", err)
+		return fmt.Errorf("error when marshaling batch hit: %v", err)
 	}
 
 	d.logger.Infof("sending hits to datacollect: %v", string(json_data))
 	req, err := http.NewRequest(http.MethodPost, d.trackingURL, bytes.NewBuffer(json_data))
+	req = req.WithContext(ctx)
 	if err != nil {
 		d.logger.Errorf("error when marshaling batch hit: %v", err)
 	}
@@ -145,17 +133,16 @@ func (d *DataCollectProcessor) sendBatchHit() {
 	resp, err := d.httpClient.Do(req)
 
 	if err != nil {
-		d.logger.Errorf("error when sending batch hit: %v", err)
-		return
+		return fmt.Errorf("error when making HTTP request: %v", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		d.logger.Errorf("error when sending batch hit: %v", resp.Status)
-		return
+		return fmt.Errorf("got status %v when calling HTTP request", resp.Status)
 	}
 	d.logger.Infof("%d hits sent to datacollect successfully", len(hits))
 
 	d.hits = []models.MappableHit{}
+	return nil
 }
 
 func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
@@ -169,7 +156,14 @@ func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
 	d.hits = append(d.hits, mappableHits...)
 	if len(d.hits) >= d.batchSize {
 		d.ticker.Reset(d.batchingWindow)
-		d.sendBatchHit()
+		err := d.sendBatchHit(context.Background())
+		if err != nil {
+			d.logger.Errorf("error when sending batch hit: %v", err)
+		}
 	}
 	return nil
+}
+
+func (d *DataCollectProcessor) Shutdown(ctx context.Context) error {
+	return d.sendBatchHit(ctx)
 }

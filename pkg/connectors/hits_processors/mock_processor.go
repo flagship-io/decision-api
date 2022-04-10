@@ -1,6 +1,10 @@
 package hits_processors
 
-import "github.com/flagship-io/decision-api/pkg/connectors"
+import (
+	"context"
+
+	"github.com/flagship-io/decision-api/pkg/connectors"
+)
 
 type MockHitProcessor struct {
 	TrackedHits connectors.TrackingHits
@@ -8,5 +12,9 @@ type MockHitProcessor struct {
 
 func (d *MockHitProcessor) TrackHits(hits connectors.TrackingHits) error {
 	d.TrackedHits = hits
+	return nil
+}
+
+func (d *MockHitProcessor) Shutdown(context.Context) error {
 	return nil
 }

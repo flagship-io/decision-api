@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
-	"sync"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
@@ -17,7 +21,7 @@ import (
 )
 
 var srv *server.Server
-var lock = &sync.Mutex{}
+var shutdownTimeout = 3 * time.Second
 
 func createLogger(cfg *config.Config) *logger.Logger {
 	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
@@ -74,18 +78,31 @@ func main() {
 		log.Printf("config loaded with error: %v", err)
 	}
 
-	log := createLogger(cfg)
-	lock.Lock()
-	srv, err = createServer(cfg, log)
-	lock.Unlock()
+	logger := createLogger(cfg)
+	srv, err = createServer(cfg, logger)
 	if err != nil {
-		log.Fatalf("error when creating server: %v", err)
+		logger.Fatalf("error when creating server: %v", err)
 	}
 
-	log.Infof("server listening on %s", cfg.GetStringDefault("address", ":8080"))
-	err = srv.Listen()
+	// Run server
+	go func() {
+		logger.Infof("server listening on %s", cfg.GetStringDefault("address", ":8080"))
+		if err := srv.Listen(); err != http.ErrServerClosed {
+			logger.Fatalf("error when starting server: %v", err)
+		}
+	}()
 
-	if err != http.ErrServerClosed {
-		log.Fatalf("error when starting server: %v", err)
-	}
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	<-signalChannel
+
+	// Try to gracefully shutdown the server
+	ctx, cancelFunc := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancelFunc()
+	srv.Shutdown(ctx)
 }

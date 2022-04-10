@@ -58,7 +58,8 @@ func TestNewCDNLoader(t *testing.T) {
 		// Send response to be tested
 		lock.Lock()
 		confJSON, _ := protojson.Marshal(conf)
-		rw.Write(confJSON)
+		_, err := rw.Write(confJSON)
+		assert.Nil(t, err)
 		lock.Unlock()
 	}))
 	// Close the server when test finishes
@@ -72,7 +73,8 @@ func TestNewCDNLoader(t *testing.T) {
 	assert.Equal(t, time.Second*1, loader.pollingInternal)
 	assert.Equal(t, httpClient, loader.httpClient)
 
-	loader.Init("env_id", "api_key")
+	err := loader.Init("env_id", "api_key")
+	assert.Nil(t, err)
 	campaign := loader.loadedEnvironment.Common.Campaigns[0]
 	assert.EqualValues(t, conf.Panic, loader.loadedEnvironment.Common.IsPanic)
 	assert.EqualValues(t, conf.AccountSettings.Enabled1V1T, loader.loadedEnvironment.Common.SingleAssignment)
@@ -87,7 +89,7 @@ func TestNewCDNLoader(t *testing.T) {
 	assert.EqualValues(t, conf.Campaigns[0].VariationGroups[0].Variations[0].Reference, campaign.VariationGroups[0].Variations[0].Reference)
 	assert.EqualValues(t, conf.Campaigns[0].VariationGroups[0].Variations[0].Modifications, campaign.VariationGroups[0].Variations[0].Modifications)
 
-	_, err := loader.LoadEnvironment("env_id", "api_key")
+	_, err = loader.LoadEnvironment("env_id", "api_key")
 	assert.Nil(t, err)
 
 	lock.Lock()
