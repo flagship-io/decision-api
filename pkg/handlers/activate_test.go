@@ -11,6 +11,7 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
+	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,6 +80,19 @@ func TestActivate(t *testing.T) {
 	assert.Equal(t, 204, resp.StatusCode)
 
 	cacheVisitor, err := assignmentManager.LoadAssignments("env_id", "visitor_id")
+	assert.Nil(t, err)
+	assert.Nil(t, cacheVisitor)
+
+	context.EnvironmentLoader.(*environment_loaders.MockLoader).MockedEnvironment.Common.SingleAssignment = true
+	context.EnvironmentLoader.(*environment_loaders.MockLoader).MockedEnvironment.Common.CacheEnabled = true
+
+	w = httptest.NewRecorder()
+	req.Body = io.NopCloser(strings.NewReader(body))
+	Activate(context)(w, req)
+
+	resp = w.Result()
+	assert.Equal(t, 204, resp.StatusCode)
+	cacheVisitor, err = assignmentManager.LoadAssignments("env_id", "visitor_id")
 	assert.Nil(t, err)
 	assert.Len(t, cacheVisitor.Assignments, 1)
 	assert.Equal(t, "variation_id", cacheVisitor.Assignments["campaign_id"].VariationID)

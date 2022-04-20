@@ -56,32 +56,39 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
-		existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateRequest.Cid, activateRequest.Vid)
+		environment, err := context.EnvironmentLoader.LoadEnvironment(activateRequest.Cid, context.APIKey)
 		if err != nil {
-			log.Printf("Error when reading existing assignments : %v", err)
+			log.Printf("Error when reading existing environment : %v", err)
 		}
 
-		var vgAssign *decision.VisitorCache
-		if existingAssignments != nil {
-			vgAssign = existingAssignments.Assignments[activateRequest.Caid]
-		}
+		shouldPersistActivation := environment.Common.CacheEnabled && environment.Common.SingleAssignment
+		assignments := map[string]*decision.VisitorCache{}
+		if shouldPersistActivation {
+			existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateRequest.Cid, activateRequest.Vid)
+			if err != nil {
+				log.Printf("Error when reading existing assignments : %v", err)
+			}
 
-		assignments := map[string]*decision.VisitorCache{
-			activateRequest.Caid: {
+			var vgAssign *decision.VisitorCache
+			if existingAssignments != nil {
+				vgAssign = existingAssignments.Assignments[activateRequest.Caid]
+			}
+
+			assignments[activateRequest.Caid] = &decision.VisitorCache{
 				VariationID: activateRequest.Vaid,
 				Activated:   true,
-			},
+			}
+			shouldPersistActivation = vgAssign == nil || !vgAssign.Activated || vgAssign.VariationID != activateRequest.Vaid
 		}
 
-		persistAssignment := vgAssign == nil || !vgAssign.Activated || vgAssign.VariationID != activateRequest.Vaid
 		chanLength := 1
-		if persistAssignment {
+		if shouldPersistActivation {
 			chanLength = 2
 		}
 
 		errors := make(chan error, chanLength)
 
-		if persistAssignment {
+		if shouldPersistActivation {
 			go func(errors chan error) {
 				errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateRequest.Vid, assignments, now, connectors.SaveAssignmentsContext{
 					CacheLevel: connectors.Activation,
@@ -100,7 +107,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 							CampaignID:      activateRequest.Caid,
 							VariationID:     activateRequest.Vaid,
 							Timestamp:       now.UnixNano() / 1000000,
-							PersistActivate: persistAssignment,
+							PersistActivate: shouldPersistActivation,
 						},
 					},
 				})
