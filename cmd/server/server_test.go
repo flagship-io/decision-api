@@ -16,7 +16,7 @@ func TestCreateLogger(t *testing.T) {
 	cfg := &config.Config{
 		Viper: viper.New(),
 	}
-	cfg.Set("log_level", "debug")
+	cfg.Set("log.level", "debug")
 	log := createLogger(cfg)
 
 	assert.Equal(t, logrus.DebugLevel, log.Logger.Level)

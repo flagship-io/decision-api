@@ -7,7 +7,7 @@ const (
 	ServerCorsEnabled        = true
 	ServerCorsAllowedOrigins = "*"
 	LoggerLevel              = "warning"
-	LoggerFormat             = "test"
+	LoggerFormat             = "text"
 
 	CDNLoaderPollingInterval = time.Minute * 1
 

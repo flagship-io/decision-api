@@ -24,8 +24,8 @@ var srv *server.Server
 var shutdownTimeout = 3 * time.Second
 
 func createLogger(cfg *config.Config) *logger.Logger {
-	lvl := cfg.GetStringDefault("log_level", config.LoggerLevel)
-	format := cfg.GetStringDefault("log_format", config.LoggerFormat)
+	lvl := cfg.GetStringDefault("log.level", config.LoggerLevel)
+	format := cfg.GetStringDefault("log.format", config.LoggerFormat)
 	log := logger.New(lvl, "server")
 
 	if format == "json" {
@@ -63,8 +63,8 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		server.WithHitsProcessor(hits_processors.NewDataCollectProcessor(hits_processors.WithLogLevel(logLvl))),
 		server.WithAssignmentsManager(assignmentManager),
 		server.WithCorsOptions(&models.CorsOptions{
-			Enabled:        cfg.GetBool("cors_enabled"),
-			AllowedOrigins: cfg.GetStringDefault("cors_allowed_origins", config.ServerCorsAllowedOrigins),
+			Enabled:        cfg.GetBool("cors.enabled"),
+			AllowedOrigins: cfg.GetStringDefault("cors.allowed_origins", config.ServerCorsAllowedOrigins),
 		}),
 	)
 }

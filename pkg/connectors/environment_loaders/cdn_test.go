@@ -100,6 +100,6 @@ func TestNewCDNLoader(t *testing.T) {
 	lock.Lock()
 	data, err := loader.LoadEnvironment("env_id", "api_key")
 	assert.Nil(t, err)
-	assert.EqualValues(t, conf.Panic, data.Common.IsPanic)
+	assert.Equal(t, conf.Panic, data.Common.IsPanic)
 	lock.Unlock()
 }

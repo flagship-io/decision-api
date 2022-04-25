@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -17,12 +16,12 @@ func NewFromFilename(name string) (*Config, error) {
 	v.SetConfigFile(name)
 
 	v.SetDefault("address", ServerAddress)
-	v.SetDefault("cors_enabled", ServerCorsEnabled)
-	v.SetDefault("cors_allowed_origins", ServerCorsAllowedOrigins)
-	v.SetDefault("log_level", LoggerLevel)
-	v.SetDefault("log_format", LoggerFormat)
+	v.SetDefault("cors.enabled", ServerCorsEnabled)
+	v.SetDefault("cors.allowed_origins", ServerCorsAllowedOrigins)
+	v.SetDefault("log.level", LoggerLevel)
+	v.SetDefault("log.format", LoggerFormat)
 	v.SetDefault("polling_interval", CDNLoaderPollingInterval)
-	v.SetDefault("cache_options_redishost", RedisAddr)
+	v.SetDefault("cache.options.redisHost", RedisAddr)
 
 	// replace dot in key name by underscore
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -41,14 +40,6 @@ func (c *Config) GetStringDefault(key, def string) string {
 	}
 
 	return c.Viper.GetString(key)
-}
-
-func (c *Config) GetDurationDefault(key string, def time.Duration) time.Duration {
-	if !c.Viper.IsSet(key) {
-		return def
-	}
-
-	return c.Viper.GetDuration(key)
 }
 
 func (c *Config) GetIntDefault(key string, def int) int {

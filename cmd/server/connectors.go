@@ -9,7 +9,7 @@ import (
 )
 
 func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.AssignmentsManager, err error) {
-	switch cfg.GetStringDefault("cache_type", "") {
+	switch cfg.GetStringDefault("cache.type", "") {
 	case "memory":
 		assignmentsManager = assignments_managers.InitMemoryManager()
 	case "local":
@@ -18,14 +18,14 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 		})
 	case "redis":
 		var tlsConfig *tls.Config
-		if cfg.GetBool("cache_options_redistls") {
+		if cfg.GetBool("cache.options.redisTls") {
 			tlsConfig = &tls.Config{}
 		}
 		assignmentsManager, err = assignments_managers.InitRedisManager(assignments_managers.RedisOptions{
-			Host:      cfg.GetStringDefault("cache_options_redishost", "localhost:6379"),
-			Username:  cfg.GetStringDefault("cache_options_redisusername", ""),
-			Password:  cfg.GetStringDefault("cache_options_redispassword", ""),
-			Db:        cfg.GetIntDefault("cache_options_redisdb", 0),
+			Host:      cfg.GetStringDefault("cache.options.redisHost", "localhost:6379"),
+			Username:  cfg.GetStringDefault("cache_options_redisUsername", ""),
+			Password:  cfg.GetStringDefault("cache_options_redisPassword", ""),
+			Db:        cfg.GetIntDefault("cache.options.redisDb", 0),
 			LogLevel:  config.LoggerLevel,
 			TLSConfig: tlsConfig,
 		})
