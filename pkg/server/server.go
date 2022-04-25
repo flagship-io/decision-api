@@ -16,6 +16,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/handlers/middlewares"
 	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	common "github.com/flagship-io/flagship-common"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -92,7 +93,11 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 		environmentLoader:  environment_loaders.NewCDNLoader(),
 		hitsProcessor:      hits_processors.NewDataCollectProcessor(),
 		assignmentsManager: &assignments_managers.EmptyManager{},
-		recover:            true,
+		corsOptions: &models.CorsOptions{
+			Enabled:        true,
+			AllowedOrigins: "*",
+		},
+		recover: true,
 	}
 
 	for _, opt := range opts {
@@ -138,6 +143,13 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 			AssignmentsManager: serverOptions.assignmentsManager,
 		},
 	}
+
+	// set the logger for common package
+	commonLogger := logger.New(serverOptions.logger.Level.String(), "common")
+	commonLogger.Logger.SetFormatter(serverOptions.logger.Logger.Formatter)
+	common.SetLogger(&common.DefaultLogger{
+		Entry: commonLogger.Entry,
+	})
 
 	mux := http.NewServeMux()
 

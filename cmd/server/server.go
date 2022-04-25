@@ -16,7 +16,6 @@ import (
 	"github.com/flagship-io/decision-api/pkg/server"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
-	common "github.com/flagship-io/flagship-common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,14 +35,6 @@ func createLogger(cfg *config.Config) *logger.Logger {
 
 func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error) {
 	logLvl := log.Logger.Level.String()
-
-	// set the logger for common package
-	commonLogger := logger.New(logLvl, "common")
-	commonLogger.Logger.SetFormatter(log.Logger.Formatter)
-	common.SetLogger(&common.DefaultLogger{
-		Entry: commonLogger.Entry,
-	})
-
 	log.Info("initializing assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)
 	if err != nil {
