@@ -37,15 +37,15 @@ type EnvironmentLoader interface {
 	LoadEnvironment(envID string, APIKey string) (*models.Environment, error)
 }
 
-type CacheLevel int64
+type AssignmentScope int64
 
 const (
-	Decision   CacheLevel = 0
-	Activation CacheLevel = 1
+	Decision   AssignmentScope = 0
+	Activation AssignmentScope = 1
 )
 
 type SaveAssignmentsContext struct {
-	CacheLevel CacheLevel
+	AssignmentScope AssignmentScope
 }
 
 type AssignmentsManager interface {

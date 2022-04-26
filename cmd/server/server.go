@@ -60,10 +60,10 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 }
 
 func main() {
-	filename := flag.String("config", "config.yaml", "Path the configuration file")
+	cfgFilename := flag.String("config", "config.yaml", "Path the configuration file")
 	flag.Parse()
 
-	cfg, errCfg := config.NewFromFilename(*filename)
+	cfg, errCfg := config.NewFromFilename(*cfgFilename)
 	logger := createLogger(cfg)
 
 	if errCfg != nil {

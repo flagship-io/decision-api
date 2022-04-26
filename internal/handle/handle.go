@@ -86,7 +86,7 @@ func Decision(handleRequest *Request, tracker *common.Tracker) error {
 			},
 			SaveCache: func(environmentID, id string, assignment *common.VisitorAssignments) error {
 				return handleRequest.DecisionContext.AssignmentsManager.SaveAssignments(environmentID, id, assignment.Assignments, handleRequest.Time, connectors.SaveAssignmentsContext{
-					CacheLevel: connectors.Decision,
+					AssignmentScope: connectors.Decision,
 				})
 			},
 			ActivateCampaigns: func(activations []*common.VisitorActivation) error {

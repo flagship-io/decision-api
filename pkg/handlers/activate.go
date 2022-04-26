@@ -91,7 +91,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		if shouldPersistActivation {
 			go func(errors chan error) {
 				errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateRequest.Vid, assignments, now, connectors.SaveAssignmentsContext{
-					CacheLevel: connectors.Activation,
+					AssignmentScope: connectors.Activation,
 				})
 			}(errors)
 		}
