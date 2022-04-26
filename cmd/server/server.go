@@ -18,7 +18,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var srv *server.Server
 var shutdownTimeout = 3 * time.Second
 
 func createLogger(cfg *config.Config) *logger.Logger {
