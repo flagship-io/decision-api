@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -149,4 +151,22 @@ func TestCampaigns(t *testing.T) {
 	err = protojson.Unmarshal(data, &decisionResponseNormal)
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(decisionResponseNormal.Campaigns))
+
+	// normal mode, send context events true, extras
+	url, _ = url.Parse("/campaigns")
+	decisionContext.EnvironmentLoader.(*environment_loaders.MockLoader).ErrorReturned = models.ErrEnvironmentNotFound
+	w = httptest.NewRecorder()
+	req = &http.Request{
+		URL:    url,
+		Body:   io.NopCloser(strings.NewReader(body)),
+		Method: "POST",
+	}
+
+	Campaigns(decisionContext)(w, req)
+	resp = w.Result()
+	data, err = io.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	respErr := &utils.ClientErrorMessage{}
+	json.Unmarshal(data, &respErr)
+	assert.Contains(t, respErr.Message, "not found")
 }
