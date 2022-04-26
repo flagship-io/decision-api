@@ -1,7 +1,6 @@
 package environment_loaders
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -97,7 +96,7 @@ func (loader *CDNLoader) Init(envID string, APIKey string) error {
 func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/%s/bucketing.json", l.baseURL, envID), nil)
 	if err != nil {
-		return fmt.Errorf("an error occured when creating HTTP request: %v", err)
+		return fmt.Errorf("error when creating HTTP request: %v", err)
 	}
 
 	l.lock.RLock()
@@ -106,13 +105,11 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 
 	resp, err := l.httpClient.Do(req)
 	if err != nil {
-		l.logger.Errorf("an error occured when fetching environment: %v", err)
-		return err
+		return fmt.Errorf("network error: %v", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		l.logger.Errorf("an HTTP error occured when fetching environment: %v", resp.Status)
-		return errors.New("environment loader HTTP error")
+		return fmt.Errorf("environment loader HTTP error: %v", resp.Status)
 	}
 
 	if resp.StatusCode == 304 {
@@ -121,16 +118,14 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 
 	response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		l.logger.Errorf("error when reading body: %v", err)
-		return err
+		return fmt.Errorf("error when reading body: %v", err)
 	}
 
 	conf := &bucketing.Bucketing_BucketingResponse{}
 	err = (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(response, conf)
 
 	if err != nil {
-		l.logger.Errorf("an error occured when parsing environment: %v", err)
-		return err
+		return fmt.Errorf("an error occured when parsing environment: %v", err)
 	}
 
 	campaigns := []*common.Campaign{}
@@ -218,11 +213,14 @@ func (l *CDNLoader) LoadEnvironment(envID string, APIKey string) (*models.Enviro
 		err = l.fetchEnvironment(envID, APIKey)
 	}
 
-	// copy loaded environment to prevent campaigns slice reference modification
-	environment := *l.loadedEnvironment
-	commonEnv := *l.loadedEnvironment.Common
-	commonEnv.Campaigns = make([]*common.Campaign, len(l.loadedEnvironment.Common.Campaigns))
-	copy(commonEnv.Campaigns, l.loadedEnvironment.Common.Campaigns)
-	environment.Common = &commonEnv
+	environment := models.Environment{}
+	if l.loadedEnvironment != nil {
+		// copy loaded environment to prevent campaigns slice reference modification
+		environment = *l.loadedEnvironment
+		commonEnv := *l.loadedEnvironment.Common
+		commonEnv.Campaigns = make([]*common.Campaign, len(l.loadedEnvironment.Common.Campaigns))
+		copy(commonEnv.Campaigns, l.loadedEnvironment.Common.Campaigns)
+		environment.Common = &commonEnv
+	}
 	return &environment, err
 }

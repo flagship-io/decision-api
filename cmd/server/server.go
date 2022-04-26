@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -64,13 +63,14 @@ func main() {
 	filename := flag.String("config", "config.yaml", "Path the configuration file")
 	flag.Parse()
 
-	cfg, err := config.NewFromFilename(*filename)
-	if err != nil {
-		log.Printf("config loaded with error: %v", err)
+	cfg, errCfg := config.NewFromFilename(*filename)
+	logger := createLogger(cfg)
+
+	if errCfg != nil {
+		logger.Warn(errCfg)
 	}
 
-	logger := createLogger(cfg)
-	srv, err = createServer(cfg, logger)
+	srv, err := createServer(cfg, logger)
 	if err != nil {
 		logger.Fatalf("error when creating server: %v", err)
 	}

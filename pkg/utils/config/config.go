@@ -28,7 +28,7 @@ func NewFromFilename(name string) (*Config, error) {
 	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
-		return &Config{v}, fmt.Errorf("viper.ReadInConfig: %w", err)
+		return &Config{v}, fmt.Errorf("config file could not be read: %w. Fallback to environment variables", err)
 	}
 
 	return &Config{v}, nil
