@@ -29,7 +29,11 @@ func (m *MemoryManager) LoadAssignments(envID string, visitorID string) (*common
 	return assignments, nil
 }
 
-func (m *MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (d *MemoryManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+func (m *MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	m.lock.Lock()
 	m.cache[envID+m.separator+visitorID] = &common.VisitorAssignments{
 		Timestamp:   date.UnixMilli(),

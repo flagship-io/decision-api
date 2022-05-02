@@ -13,6 +13,10 @@ func (*EmptyManager) LoadAssignments(envID string, visitorID string) (*common.Vi
 	return nil, nil
 }
 
-func (*EmptyManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (d *EmptyManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+func (*EmptyManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	return nil
 }

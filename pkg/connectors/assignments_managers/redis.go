@@ -57,27 +57,6 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 	}, nil
 }
 
-// SaveAssignments saves the assignments in cache for this visitor
-func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
-	if m.client == nil {
-		return errors.New("redis cache manager not initialized")
-	}
-
-	data, err := json.Marshal(&common.VisitorAssignments{
-		Assignments: vgIDAssignments,
-		Timestamp:   date.UnixMilli(),
-	})
-	if err != nil {
-		return err
-	}
-
-	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
-	cmd := m.client.Set(ctx, visitorID, string(data), 0)
-	_, err = cmd.Result()
-
-	return err
-}
-
 // Get returns the campaigns in cache for this visitor
 func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	if m.client == nil {
@@ -99,4 +78,29 @@ func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.
 	err = json.Unmarshal(data, &cache)
 
 	return cache, err
+}
+
+func (d *RedisManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+// SaveAssignments saves the assignments in cache for this visitor
+func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+	if m.client == nil {
+		return errors.New("redis cache manager not initialized")
+	}
+
+	data, err := json.Marshal(&common.VisitorAssignments{
+		Assignments: vgIDAssignments,
+		Timestamp:   date.UnixMilli(),
+	})
+	if err != nil {
+		return err
+	}
+
+	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
+	cmd := m.client.Set(ctx, visitorID, string(data), 0)
+	_, err = cmd.Result()
+
+	return err
 }

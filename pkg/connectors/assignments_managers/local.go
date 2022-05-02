@@ -39,24 +39,6 @@ func InitLocalCacheManager(localOptions LocalOptions) (m *LocalManager, err erro
 	return m, nil
 }
 
-// Set saves the campaigns in cache for this visitor
-func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
-	if m.db == nil {
-		return errors.New("local cache manager not initialized")
-	}
-
-	cache, err := json.Marshal(&common.VisitorAssignments{
-		Assignments: vgIDAssignments,
-		Timestamp:   date.UnixMilli(),
-	})
-
-	if err == nil {
-		err = m.db.Put([]byte(envID+m.keySeparator+visitorID), cache)
-	}
-
-	return err
-}
-
 // LoadAssignments returns the visitor assignment in cache
 func (m *LocalManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	if m.db == nil {
@@ -80,6 +62,28 @@ func (m *LocalManager) LoadAssignments(envID string, visitorID string) (*common.
 	}
 
 	return assignments, nil
+}
+
+func (d *LocalManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+// Set saves the campaigns in cache for this visitor
+func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+	if m.db == nil {
+		return errors.New("local cache manager not initialized")
+	}
+
+	cache, err := json.Marshal(&common.VisitorAssignments{
+		Assignments: vgIDAssignments,
+		Timestamp:   date.UnixMilli(),
+	})
+
+	if err == nil {
+		err = m.db.Put([]byte(envID+m.keySeparator+visitorID), cache)
+	}
+
+	return err
 }
 
 // Dispose frees IO resources
