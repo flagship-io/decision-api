@@ -59,7 +59,7 @@ func TestVisitorContextToMap(t *testing.T) {
 		"cid":  "env_id",
 		"vid":  "vid",
 		"cuid": "cuid",
-		"s": map[string]interface{}{
+		"s": map[string]string{
 			"k": "v",
 		},
 		"qt": int64(100),
