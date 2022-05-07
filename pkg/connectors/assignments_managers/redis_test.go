@@ -34,6 +34,7 @@ func TestRedisCache(t *testing.T) {
 
 	m, err := InitRedisManager(RedisOptions{
 		Host: s.Addr(),
+		TTL:  time.Hour,
 	})
 
 	assert.Equal(t, nil, err)
@@ -56,4 +57,25 @@ func TestRedisCache(t *testing.T) {
 	r, err = m.LoadAssignments(envID, visID)
 	assert.Equal(t, nil, err)
 	assert.NotEqual(t, nil, r.Assignments["vgID"])
+
+	cache.Assignments["vgID2"] = &decision.VisitorCache{VariationID: "vID2", Activated: true}
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
+
+	assert.Equal(t, nil, err)
+
+	r, err = m.LoadAssignments(envID, visID)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, "vID2", r.Assignments["vgID2"].VariationID)
+	assert.Equal(t, true, r.Assignments["vgID2"].Activated)
+
+	cache.Assignments["expireVG"] = &decision.VisitorCache{VariationID: "expireVID"}
+	m.TTL = time.Second
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
+	assert.Equal(t, nil, err)
+
+	s.FastForward(2 * time.Second)
+	r, err = m.LoadAssignments(envID, visID)
+	assert.Equal(t, nil, err)
+	assert.Nil(t, r)
 }

@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
@@ -17,6 +19,7 @@ import (
 type RedisManager struct {
 	client *redis.Client
 	logger *logger.Logger
+	TTL    time.Duration
 }
 
 // RedisOptions are the options necessary to make redis cache manager work
@@ -27,6 +30,7 @@ type RedisOptions struct {
 	TLSConfig *tls.Config
 	Db        int
 	LogLevel  string
+	TTL       time.Duration
 }
 
 var rdb *redis.Client
@@ -54,6 +58,7 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 	return &RedisManager{
 		client: rdb,
 		logger: logger,
+		TTL:    options.TTL,
 	}, nil
 }
 
@@ -63,18 +68,22 @@ func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssig
 		return errors.New("redis cache manager not initialized")
 	}
 
-	data, err := json.Marshal(&common.VisitorAssignments{
-		Assignments: vgIDAssignments,
-		Timestamp:   date.UnixMilli(),
-	})
-	if err != nil {
-		return err
-	}
-
 	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
-	cmd := m.client.Set(ctx, visitorID, string(data), 0)
-	_, err = cmd.Result()
+	values := map[string]interface{}{}
+	for k, v := range vgIDAssignments {
+		data, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		values[k] = string(data)
+	}
+	values["ts"] = fmt.Sprintf("%d", date.UnixMilli())
 
+	pipe := m.client.Pipeline()
+	pipe.HSet(ctx, visitorID, values)
+	pipe.Expire(ctx, visitorID, m.TTL)
+
+	_, err := pipe.Exec(ctx)
 	return err
 }
 
@@ -85,8 +94,8 @@ func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.
 	}
 
 	m.logger.Infof("Getting visitor cache for ID %s", visitorID)
-	cmd := m.client.Get(ctx, visitorID)
-	data, err := cmd.Bytes()
+	cmd := m.client.HGetAll(ctx, visitorID)
+	data, err := cmd.Result()
 
 	if err != nil {
 		if err == redis.Nil {
@@ -95,8 +104,30 @@ func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.
 		return nil, err
 	}
 
-	cache := &common.VisitorAssignments{}
-	err = json.Unmarshal(data, &cache)
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	cache := &common.VisitorAssignments{
+		Assignments: make(map[string]*common.VisitorCache),
+	}
+	for k, v := range data {
+		if k == "ts" {
+			ts, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			cache.Timestamp = ts
+			continue
+		}
+
+		vCache := &common.VisitorCache{}
+		err = json.Unmarshal([]byte(v), &vCache)
+		if err != nil {
+			return nil, err
+		}
+		cache.Assignments[k] = vCache
+	}
 
 	return cache, err
 }

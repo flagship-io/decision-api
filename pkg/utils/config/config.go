@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -48,4 +49,12 @@ func (c *Config) GetIntDefault(key string, def int) int {
 	}
 
 	return c.Viper.GetInt(key)
+}
+
+func (c *Config) GetDurationDefault(key string, def time.Duration) time.Duration {
+	if !c.Viper.IsSet(key) {
+		return def
+	}
+
+	return c.Viper.GetDuration(key)
 }

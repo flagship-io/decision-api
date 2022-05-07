@@ -43,7 +43,18 @@ func TestLocalCache(t *testing.T) {
 
 	r, err = m.LoadAssignments(envID, visID)
 	assert.Nil(t, err)
-	assert.NotEqual(t, nil, r.Assignments["vgID"])
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, false, r.Assignments["vgID"].Activated)
+
+	cache.Assignments["vgID2"] = &decision.VisitorCache{VariationID: "vID2", Activated: true}
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
+	assert.Nil(t, err)
+
+	r, err = m.LoadAssignments(envID, visID)
+	assert.Nil(t, err)
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, "vID2", r.Assignments["vgID2"].VariationID)
+	assert.Equal(t, true, r.Assignments["vgID2"].Activated)
 
 	err = m.Dispose()
 	assert.Nil(t, err)
