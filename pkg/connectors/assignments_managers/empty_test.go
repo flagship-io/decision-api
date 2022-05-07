@@ -25,11 +25,20 @@ func TestEmptyCache(t *testing.T) {
 		Assignments: make(map[string]*decision.VisitorCache),
 	}
 	cache.Assignments["vgID"] = &decision.VisitorCache{VariationID: "vID"}
-	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now())
 
 	assert.Equal(t, nil, err)
 
 	r, err = m.LoadAssignments(envID, visID)
 	assert.Equal(t, nil, err)
 	assert.Nil(t, r)
+
+	shouldSaveAssignments := m.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
+		AssignmentScope: connectors.Decision,
+	})
+	assert.True(t, shouldSaveAssignments)
+	shouldSaveAssignments = m.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
+		AssignmentScope: connectors.Activation,
+	})
+	assert.True(t, shouldSaveAssignments)
 }

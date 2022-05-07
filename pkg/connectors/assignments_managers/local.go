@@ -39,8 +39,37 @@ func InitLocalCacheManager(localOptions LocalOptions) (m *LocalManager, err erro
 	return m, nil
 }
 
-// Set saves the campaigns in cache for this visitor
-func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+// LoadAssignments returns the visitor assignment in cache
+func (m *LocalManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
+	if m.db == nil {
+		return nil, errors.New("local cache manager not initialized")
+	}
+
+	data, err := m.db.Get([]byte(envID + m.keySeparator + visitorID))
+
+	if err != nil {
+		if err == bitcask.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	assignments := &common.VisitorAssignments{}
+	err = json.Unmarshal(data, &assignments)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return assignments, nil
+}
+
+func (d *LocalManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+// SaveAssignments saves the campaigns in cache for this visitor
+func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	if m.db == nil {
 		return errors.New("local cache manager not initialized")
 	}
@@ -72,31 +101,6 @@ func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssig
 	}
 
 	return err
-}
-
-// LoadAssignments returns the visitor assignment in cache
-func (m *LocalManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
-	if m.db == nil {
-		return nil, errors.New("local cache manager not initialized")
-	}
-
-	data, err := m.db.Get([]byte(envID + m.keySeparator + visitorID))
-
-	if err != nil {
-		if err == bitcask.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	assignments := &common.VisitorAssignments{}
-	err = json.Unmarshal(data, &assignments)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return assignments, nil
 }
 
 // Dispose frees IO resources

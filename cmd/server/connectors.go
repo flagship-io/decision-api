@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
@@ -30,6 +32,17 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 			TTL:       cfg.GetDurationDefault("cache.options.redisTtl", 3*30*24*time.Hour),
 			LogLevel:  config.LoggerLevel,
 			TLSConfig: tlsConfig,
+		})
+	case "dynamo":
+		session, _ := session.NewSession()
+		client := dynamodb.New(session)
+		assignmentsManager = assignments_managers.InitDynamoManager(assignments_managers.DynamoManagerOptions{
+			Client:              client,
+			TableName:           cfg.GetStringDefault("cache.options.dynamoTableName", "visitor-assignments"),
+			PrimaryKeySeparator: cfg.GetStringDefault("cache.options.dynamoPKSeparator", "."),
+			PrimaryKeyField:     cfg.GetStringDefault("cache.options.dynamoPKField", "id"),
+			GetItemTimeout:      cfg.GetDurationDefault("cache.options.dynamoGetTimeout", 1*time.Second),
+			LogLevel:            config.LoggerLevel,
 		})
 	default:
 		assignmentsManager = &assignments_managers.EmptyManager{}

@@ -62,31 +62,6 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 	}, nil
 }
 
-// SaveAssignments saves the assignments in cache for this visitor
-func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
-	if m.client == nil {
-		return errors.New("redis cache manager not initialized")
-	}
-
-	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
-	values := map[string]interface{}{}
-	for k, v := range vgIDAssignments {
-		data, err := json.Marshal(v)
-		if err != nil {
-			return err
-		}
-		values[k] = string(data)
-	}
-	values["ts"] = fmt.Sprintf("%d", date.UnixMilli())
-
-	pipe := m.client.Pipeline()
-	pipe.HSet(ctx, visitorID, values)
-	pipe.Expire(ctx, visitorID, m.TTL)
-
-	_, err := pipe.Exec(ctx)
-	return err
-}
-
 // Get returns the campaigns in cache for this visitor
 func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error) {
 	if m.client == nil {
@@ -130,4 +105,33 @@ func (m *RedisManager) LoadAssignments(envID string, visitorID string) (*common.
 	}
 
 	return cache, err
+}
+
+func (d *RedisManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	return true
+}
+
+// SaveAssignments saves the assignments in cache for this visitor
+func (m *RedisManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
+	if m.client == nil {
+		return errors.New("redis cache manager not initialized")
+	}
+
+	m.logger.Infof("Setting visitor cache for ID %s", visitorID)
+	values := map[string]interface{}{}
+	for k, v := range vgIDAssignments {
+		data, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		values[k] = string(data)
+	}
+	values["ts"] = fmt.Sprintf("%d", date.UnixMilli())
+
+	pipe := m.client.Pipeline()
+	pipe.HSet(ctx, visitorID, values)
+	pipe.Expire(ctx, visitorID, m.TTL)
+
+	_, err := pipe.Exec(ctx)
+	return err
 }
