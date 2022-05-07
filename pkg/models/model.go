@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	common "github.com/flagship-io/flagship-common"
@@ -64,10 +65,14 @@ func (c *VisitorContext) ComputeQueueTime() {
 }
 
 func (c *VisitorContext) ToMap() map[string]interface{} {
+	segmentsString := map[string]string{}
+	for k, v := range c.Context {
+		segmentsString[k] = fmt.Sprintf("%v", v)
+	}
 	result := map[string]interface{}{
 		"cid": c.EnvID,
 		"vid": c.VisitorID,
-		"s":   c.Context,
+		"s":   segmentsString,
 		"qt":  c.QueueTime,
 		"t":   "SEGMENT",
 	}

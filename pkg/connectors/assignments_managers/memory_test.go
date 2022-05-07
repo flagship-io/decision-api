@@ -32,6 +32,17 @@ func TestMemoryCache(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.NotEqual(t, nil, r.Assignments["vgID"])
 
+	cache.Assignments["vgID2"] = &decision.VisitorCache{VariationID: "vID2", Activated: true}
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now())
+
+	assert.Equal(t, nil, err)
+
+	r, err = m.LoadAssignments(envID, visID)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, "vID2", r.Assignments["vgID2"].VariationID)
+	assert.Equal(t, true, r.Assignments["vgID2"].Activated)
+
 	shouldSaveAssignments := m.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
 		AssignmentScope: connectors.Decision,
 	})

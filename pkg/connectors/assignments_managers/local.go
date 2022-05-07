@@ -68,19 +68,36 @@ func (d *LocalManager) ShouldSaveAssignments(context connectors.SaveAssignmentsC
 	return true
 }
 
-// Set saves the campaigns in cache for this visitor
+// SaveAssignments saves the campaigns in cache for this visitor
 func (m *LocalManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	if m.db == nil {
 		return errors.New("local cache manager not initialized")
 	}
 
+	key := []byte(envID + m.keySeparator + visitorID)
+
+	assignments := make(map[string]*common.VisitorCache)
+	if m.db.Has(key) {
+		existing, err := m.LoadAssignments(envID, visitorID)
+		if err != nil {
+			return err
+		}
+		for k, v := range existing.Assignments {
+			assignments[k] = v
+		}
+	}
+
+	for k, v := range vgIDAssignments {
+		assignments[k] = v
+	}
+
 	cache, err := json.Marshal(&common.VisitorAssignments{
-		Assignments: vgIDAssignments,
+		Assignments: assignments,
 		Timestamp:   date.UnixMilli(),
 	})
 
 	if err == nil {
-		err = m.db.Put([]byte(envID+m.keySeparator+visitorID), cache)
+		err = m.db.Put(key, cache)
 	}
 
 	return err

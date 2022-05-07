@@ -35,9 +35,19 @@ func (d *MemoryManager) ShouldSaveAssignments(context connectors.SaveAssignments
 
 func (m *MemoryManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	m.lock.Lock()
+	assignments, ok := m.cache[envID+m.separator+visitorID]
+	newAssignments := map[string]*common.VisitorCache{}
+	if ok {
+		for k, v := range assignments.Assignments {
+			newAssignments[k] = v
+		}
+	}
+	for k, v := range vgIDAssignments {
+		newAssignments[k] = v
+	}
 	m.cache[envID+m.separator+visitorID] = &common.VisitorAssignments{
 		Timestamp:   date.UnixMilli(),
-		Assignments: vgIDAssignments,
+		Assignments: newAssignments,
 	}
 	m.lock.Unlock()
 	return nil

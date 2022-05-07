@@ -29,6 +29,7 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 			Username:  cfg.GetStringDefault("cache.options.redisUsername", ""),
 			Password:  cfg.GetStringDefault("cache.options.redisPassword", ""),
 			Db:        cfg.GetIntDefault("cache.options.redisDb", 0),
+			TTL:       cfg.GetDurationDefault("cache.options.redisTtl", 3*30*24*time.Hour),
 			LogLevel:  config.LoggerLevel,
 			TLSConfig: tlsConfig,
 		})
