@@ -19,7 +19,12 @@ func (m *CustomAssignmentManager) LoadAssignments(envID string, visitorID string
 	return nil, nil
 }
 
-func (m *CustomAssignmentManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context connectors.SaveAssignmentsContext) error {
+func (m *CustomAssignmentManager) ShouldSaveAssignments(context connectors.SaveAssignmentsContext) bool {
+	// TODO implement this method
+	return true
+}
+
+func (m *CustomAssignmentManager) SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error {
 	// TODO implement this method
 	return nil
 }

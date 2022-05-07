@@ -3,6 +3,7 @@ module github.com/flagship-io/decision-api
 go 1.17
 
 require (
+	github.com/aws/aws-sdk-go v1.40.45
 	github.com/flagship-io/flagship-common v0.0.17
 	github.com/flagship-io/flagship-proto v0.0.15
 	github.com/go-kit/kit v0.12.0
@@ -19,6 +20,7 @@ require (
 require (
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 )
 

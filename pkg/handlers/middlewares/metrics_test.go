@@ -17,10 +17,10 @@ func TestMetrics(t *testing.T) {
 	})(w, &http.Request{})
 	w.Result()
 	assert.NotNil(t, metrics.responseTimes["test"])
-	assert.GreaterOrEqual(t, "10", expvar.Get("handlers.test.response_time.p50").String())
-	assert.GreaterOrEqual(t, "10", expvar.Get("handlers.test.response_time.p90").String())
-	assert.GreaterOrEqual(t, "10", expvar.Get("handlers.test.response_time.p95").String())
-	assert.GreaterOrEqual(t, "10", expvar.Get("handlers.test.response_time.p99").String())
+	assert.GreaterOrEqual(t, expvar.Get("handlers.test.response_time.p50").String(), "10")
+	assert.GreaterOrEqual(t, expvar.Get("handlers.test.response_time.p90").String(), "10")
+	assert.GreaterOrEqual(t, expvar.Get("handlers.test.response_time.p95").String(), "10")
+	assert.GreaterOrEqual(t, expvar.Get("handlers.test.response_time.p99").String(), "10")
 
 	w = httptest.NewRecorder()
 	Metrics("test", func(w http.ResponseWriter, r *http.Request) {
