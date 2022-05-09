@@ -79,7 +79,7 @@ func (srv *Server) Listen() error {
 func wrapMiddlewares(serverOptions *ServerOptions, endpointName string, handler http.HandlerFunc) http.HandlerFunc {
 	return middlewares.Recover(
 		serverOptions.recover,
-		middlewares.Metrics("campaigns",
+		middlewares.Metrics(endpointName,
 			middlewares.Version(
 				middlewares.Cors(serverOptions.corsOptions, handler))))
 }
