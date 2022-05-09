@@ -17,11 +17,6 @@ type FlagMetadata struct {
 	VariationID      string `json:"variationId"`
 }
 
-// FlagInfos represents the list of flags
-type FlagInfos struct {
-	Flags map[string]FlagInfo `json:"flags"`
-}
-
 // FlagInfo represents the informations about a flag key
 type FlagInfo struct {
 	Value    interface{}  `json:"value"`
@@ -36,7 +31,7 @@ type FlagInfo struct {
 // @Accept  json
 // @Produce  json
 // @Param request body campaignsBodySwagger true "Flag request body"
-// @Success 200 {object} map[string]FlagInfos{}
+// @Success 200 {object} map[string]FlagInfo{}
 // @Failure 400 {object} errorMessage
 // @Failure 500 {object} errorMessage
 // @Router /flags [post]
