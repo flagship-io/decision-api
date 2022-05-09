@@ -10,4 +10,4 @@ run:
 	go run ./cmd/server/. ${ARGS}
 
 build:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/server cmd/server/*.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags="-X 'github.com/flagship-io/decision-api/pkg/models.Version=${VERSION}'" -o bin/server cmd/server/*.go

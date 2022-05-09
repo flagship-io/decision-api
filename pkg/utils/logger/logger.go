@@ -14,7 +14,9 @@ type Logger struct {
 func New(lvl string, component string) *Logger {
 	l := logrus.New()
 
-	l.SetFormatter(&logrus.TextFormatter{})
+	l.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
 	l.SetOutput(os.Stderr)
 
 	l.SetLevel(logrus.WarnLevel)

@@ -76,6 +76,14 @@ func (srv *Server) Listen() error {
 	return srv.httpServer.ListenAndServe()
 }
 
+func wrapMiddlewares(serverOptions *ServerOptions, endpointName string, handler http.HandlerFunc) http.HandlerFunc {
+	return middlewares.Recover(
+		serverOptions.recover,
+		middlewares.Metrics("campaigns",
+			middlewares.Version(
+				middlewares.Cors(serverOptions.corsOptions, handler))))
+}
+
 // @title Flagship Decision API
 // @version 2.0
 // @BasePath /v2
@@ -153,12 +161,12 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/v2/campaigns", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaigns", middlewares.Cors(serverOptions.corsOptions, handlers.Campaigns(context)))))
-	mux.HandleFunc("/v2/campaigns/", middlewares.Recover(serverOptions.recover, middlewares.Metrics("campaign", middlewares.Cors(serverOptions.corsOptions, handlers.Campaign(context)))))
-	mux.HandleFunc("/v2/activate", middlewares.Recover(serverOptions.recover, middlewares.Metrics("activate", middlewares.Cors(serverOptions.corsOptions, handlers.Activate(context)))))
-	mux.HandleFunc("/v2/flags", middlewares.Recover(serverOptions.recover, middlewares.Metrics("flags", middlewares.Cors(serverOptions.corsOptions, handlers.Flags(context)))))
+	mux.HandleFunc("/v2/campaigns", wrapMiddlewares(serverOptions, "campaigns", handlers.Campaigns(context)))
+	mux.HandleFunc("/v2/campaigns/", wrapMiddlewares(serverOptions, "campaign", handlers.Campaign(context)))
+	mux.HandleFunc("/v2/activate", wrapMiddlewares(serverOptions, "activate", handlers.Activate(context)))
+	mux.HandleFunc("/v2/flags", wrapMiddlewares(serverOptions, "flags", handlers.Flags(context)))
+	mux.HandleFunc("/v2/metrics", wrapMiddlewares(serverOptions, "metrics", expvar.Handler().ServeHTTP))
 	mux.HandleFunc("/v2/swagger/", httpSwagger.WrapHandler)
-	mux.HandleFunc("/v2/metrics", expvar.Handler().ServeHTTP)
 
 	server := &Server{
 		options: serverOptions,

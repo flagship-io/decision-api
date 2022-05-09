@@ -76,7 +76,7 @@ func main() {
 
 	// Run server
 	go func() {
-		logger.Infof("server listening on %s", cfg.GetStringDefault("address", ":8080"))
+		logger.Infof("Flagship Decision API server [%s] listening on %s", models.Version, cfg.GetStringDefault("address", ":8080"))
 		if err := srv.Listen(); err != http.ErrServerClosed {
 			logger.Fatalf("error when starting server: %v", err)
 		}
