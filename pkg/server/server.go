@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/flagship-io/decision-api/docs"
+	"github.com/flagship-io/decision-api/docs"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
@@ -96,6 +96,10 @@ func wrapMiddlewares(serverOptions *ServerOptions, endpointName string, handler 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func CreateServer(envID string, apiKey string, addr string, opts ...ServerOptionsBuilder) (*Server, error) {
+
+	// Dynamic swagger version
+	docs.SwaggerInfo.Version = models.Version
+
 	serverOptions := &ServerOptions{
 		logger:             logger.New("error", "server"),
 		environmentLoader:  environment_loaders.NewCDNLoader(),
