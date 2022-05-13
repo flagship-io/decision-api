@@ -24,11 +24,11 @@ var vgTest *common.VariationGroup = &common.VariationGroup{
 	},
 	ID: "testId",
 	Variations: []*common.Variation{
-		&common.Variation{
+		{
 			Modifications: &decision_response.Modifications{
 				Value: &structpb.Struct{
 					Fields: map[string]*structpb.Value{
-						"test": &structpb.Value{
+						"test": {
 							Kind: &structpb.Value_StringValue{
 								StringValue: "youpi",
 							},
@@ -37,11 +37,11 @@ var vgTest *common.VariationGroup = &common.VariationGroup{
 				},
 			},
 			Allocation: 50,
-		}, &common.Variation{
+		}, {
 			Modifications: &decision_response.Modifications{
 				Value: &structpb.Struct{
 					Fields: map[string]*structpb.Value{
-						"test2": &structpb.Value{
+						"test2": {
 							Kind: &structpb.Value_StringValue{
 								StringValue: "youpi",
 							},

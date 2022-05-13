@@ -12,7 +12,7 @@ func Recover(enabled bool, handler func(http.ResponseWriter, *http.Request)) fun
 		if enabled {
 			defer func() {
 				if err := recover(); err != nil {
-					utils.WriteServerError(w, fmt.Errorf("unexpected error occured: %v", err))
+					utils.WriteServerError(w, fmt.Errorf("unexpected error occurred: %v", err))
 				}
 			}()
 		}

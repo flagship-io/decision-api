@@ -53,7 +53,7 @@ func InitRedisManager(options RedisOptions) (*RedisManager, error) {
 		return nil, err
 	}
 
-	logger.Info("Succesfully connected to redis server")
+	logger.Info("Successfully connected to redis server")
 
 	return &RedisManager{
 		client: rdb,
