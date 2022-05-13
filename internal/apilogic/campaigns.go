@@ -71,7 +71,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		decisionContext.Logger.Info("filling integration visitor context")
 		err := fillVisitorContext(handleRequest)
 		if err != nil {
-			handleRequest.DecisionContext.Logger.Warnf("error occured when getting integration visitor context: %v", err)
+			handleRequest.DecisionContext.Logger.Warnf("error occurred when getting integration visitor context: %v", err)
 		}
 		tracker.TimeTrack("end get visitor context from integration service")
 	}
@@ -79,7 +79,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
-	// If sendContext explicitely set to !true or context is empty, return
+	// If sendContext explicitly set to !true or context is empty, return
 	if handleRequest.SendContextEvent && len(handleRequest.DecisionRequest.Context) > 0 {
 		wg.Add(1)
 		go func() {
