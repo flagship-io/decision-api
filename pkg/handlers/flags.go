@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
@@ -9,8 +8,6 @@ import (
 	"github.com/flagship-io/decision-api/internal/utils"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
-	"github.com/flagship-io/flagship-proto/flags"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // FlagMetadata represents the metadata informations about a flag key
@@ -20,29 +17,24 @@ type FlagMetadata struct {
 	VariationID      string `json:"variationId"`
 }
 
-// FlagInfos represents the list of flags
-type FlagInfos struct {
-	Flags map[string]FlagInfo `json:"flags"`
-}
-
 // FlagInfo represents the informations about a flag key
 type FlagInfo struct {
 	Value    interface{}  `json:"value"`
 	Metadata FlagMetadata `json:"metadata"`
 }
 
-// Flags returns a flags handler
-// @Summary Get all flags
-// @Tags Flags
-// @Description Get all flags value and metadata for a visitor ID and context
-// @ID get-flags
-// @Accept  json
-// @Produce  json
-// @Param request body campaignsBodySwagger true "Flag request body"
-// @Success 200 {object} map[string]FlagInfos{}
-// @Failure 400 {object} errorMessage
-// @Failure 500 {object} errorMessage
-// @Router /flags [post]
+// // Flags returns a flags handler
+// // @Summary Get all flags
+// // @Tags Flags
+// // @Description Get all flags value and metadata for a visitor ID and context
+// // @ID get-flags
+// // @Accept  json
+// // @Produce  json
+// // @Param request body campaignsBodySwagger true "Flag request body"
+// // @Success 200 {object} map[string]FlagInfo{}
+// // @Failure 400 {object} errorMessage
+// // @Failure 500 {object} errorMessage
+// // @Router /flags [post]
 func Flags(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestFlagsHandler, utils.NewTracker())
@@ -59,38 +51,22 @@ func requestFlagsHandler(w http.ResponseWriter, handleRequest *handle.Request, e
 }
 
 func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_response.DecisionResponse) {
-	flagInfos := flags.FlagInfos{
-		Flags: make(map[string]*flags.FlagInfo),
-	}
+	flagInfos := make(map[string]*FlagInfo)
 
 	for _, c := range decisionResponse.Campaigns {
 		if c.GetVariation() != nil && c.GetVariation().GetModifications() != nil && c.GetVariation().GetModifications().GetValue() != nil && c.GetVariation().GetModifications().GetValue().GetFields() != nil {
 			for k, v := range c.GetVariation().GetModifications().GetValue().GetFields() {
-				flagInfos.Flags[k] = &flags.FlagInfo{
+				flagInfos[k] = &FlagInfo{
 					Value: v,
-					Metadata: &flags.FlagMetadata{
-						CampaignId:        c.GetId().Value,
-						Variation_GroupId: c.GetVariationGroupId().Value,
-						VariationId:       c.GetVariation().GetId().Value,
+					Metadata: FlagMetadata{
+						CampaignID:       c.GetId().Value,
+						VariationGroupID: c.GetVariationGroupId().Value,
+						VariationID:      c.GetVariation().GetId().Value,
 					},
 				}
 			}
 		}
 	}
 
-	flagInfosJSON := FlagInfos{}
-	flagData, err := protojson.Marshal(&flagInfos)
-
-	if err != nil {
-		utils.WriteServerError(w, err)
-		return
-	}
-
-	err = json.Unmarshal(flagData, &flagInfosJSON)
-	if err != nil {
-		utils.WriteServerError(w, err)
-		return
-	}
-
-	utils.WriteJSONOk(w, flagInfosJSON.Flags)
+	utils.WriteJSONOk(w, flagInfos)
 }

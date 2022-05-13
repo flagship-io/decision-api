@@ -56,4 +56,6 @@ jobs:
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            VERSION=${GITHUB_REF##*/}
           context: ./

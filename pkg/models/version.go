@@ -1,3 +1,4 @@
 package models
 
-const Version = "1.0.0"
+// Version will be changed automatically on build
+var Version = "1.0.0"

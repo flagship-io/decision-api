@@ -8,6 +8,9 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
+
+ARG VERSION
+ENV VERSION $VERSION
 RUN make build
 
 FROM alpine:latest  

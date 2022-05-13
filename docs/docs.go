@@ -169,56 +169,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/flags": {
-            "post": {
-                "description": "Get all flags value and metadata for a visitor ID and context",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Flags"
-                ],
-                "summary": "Get all flags",
-                "operationId": "get-flags",
-                "parameters": [
-                    {
-                        "description": "Flag request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.campaignsBodySwagger"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "$ref": "#/definitions/handlers.FlagInfos"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorMessage"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorMessage"
-                        }
-                    }
-                }
-            }
-        },
         "/metrics": {
             "get": {
                 "description": "Gets the metrics like memory consumption \u0026 allocation as well as response time histograms to use with monitoring tools",
@@ -242,40 +192,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.FlagInfo": {
-            "type": "object",
-            "properties": {
-                "metadata": {
-                    "$ref": "#/definitions/handlers.FlagMetadata"
-                },
-                "value": {}
-            }
-        },
-        "handlers.FlagInfos": {
-            "type": "object",
-            "properties": {
-                "flags": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/handlers.FlagInfo"
-                    }
-                }
-            }
-        },
-        "handlers.FlagMetadata": {
-            "type": "object",
-            "properties": {
-                "campaignId": {
-                    "type": "string"
-                },
-                "variationGroupId": {
-                    "type": "string"
-                },
-                "variationId": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.MetricsResponse": {
             "type": "object",
             "properties": {

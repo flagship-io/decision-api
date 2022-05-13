@@ -49,6 +49,7 @@ type SaveAssignmentsContext struct {
 }
 
 type AssignmentsManager interface {
+	ShouldSaveAssignments(context SaveAssignmentsContext) bool
 	LoadAssignments(envID string, visitorID string) (*common.VisitorAssignments, error)
-	SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time, context SaveAssignmentsContext) error
+	SaveAssignments(envID string, visitorID string, vgIDAssignments map[string]*common.VisitorCache, date time.Time) error
 }

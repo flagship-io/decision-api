@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flagship-io/decision-api/pkg/connectors"
 	decision "github.com/flagship-io/flagship-common"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +18,7 @@ func TestLocalCache(t *testing.T) {
 	_, err := notInitialized.LoadAssignments(envID, visID)
 	assert.Equal(t, "local cache manager not initialized", err.Error())
 
-	err = notInitialized.SaveAssignments(envID, visID, nil, time.Now(), connectors.SaveAssignmentsContext{})
+	err = notInitialized.SaveAssignments(envID, visID, nil, time.Now())
 	assert.Equal(t, "local cache manager not initialized", err.Error())
 
 	m, err := InitLocalCacheManager(LocalOptions{
@@ -38,12 +37,23 @@ func TestLocalCache(t *testing.T) {
 		Assignments: make(map[string]*decision.VisitorCache),
 	}
 	cache.Assignments["vgID"] = &decision.VisitorCache{VariationID: "vID"}
-	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now(), connectors.SaveAssignmentsContext{})
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now())
 	assert.Nil(t, err)
 
 	r, err = m.LoadAssignments(envID, visID)
 	assert.Nil(t, err)
-	assert.NotEqual(t, nil, r.Assignments["vgID"])
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, false, r.Assignments["vgID"].Activated)
+
+	cache.Assignments["vgID2"] = &decision.VisitorCache{VariationID: "vID2", Activated: true}
+	err = m.SaveAssignments(envID, visID, cache.Assignments, time.Now())
+	assert.Nil(t, err)
+
+	r, err = m.LoadAssignments(envID, visID)
+	assert.Nil(t, err)
+	assert.Equal(t, "vID", r.Assignments["vgID"].VariationID)
+	assert.Equal(t, "vID2", r.Assignments["vgID2"].VariationID)
+	assert.Equal(t, true, r.Assignments["vgID2"].Activated)
 
 	err = m.Dispose()
 	assert.Nil(t, err)
