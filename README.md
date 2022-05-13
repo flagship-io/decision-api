@@ -4,12 +4,18 @@
 <h3 align="center">Bring your features to life</h3>
 
 [![codecov](https://codecov.io/gh/flagship-io/decision-api/branch/main/graph/badge.svg?token=Jvuh2U89uA)](https://codecov.io/gh/flagship-io/decision-api)
+[![Go Report Card](https://goreportcard.com/badge/github.com/flagship-io/decision-api)](https://goreportcard.com/report/github.com/flagship-io/decision-api)
 [![CI](https://github.com/flagship-io/decision-api/actions/workflows/ci.yml/badge.svg)](https://github.com/flagship-io/decision-api/actions/workflows/ci.yml) 
 
-**Visit [https://developers.flagship.io/](https://developers.flagship.io/) to get started with Flagship.**
+**Visit [https://docs.developers.flagship.io/](https://docs.developers.flagship.io/) to get started with Flagship.**
+
+## Disclaimer
+THIS PROJECT IS IN EARLY ADOPTER PHASE. USE AT YOUR OWN RISK.
+
+CONTACT THE FLAGSHIP TEAM FOR MORE INFORMATION
 
 ## Docs
-- [docs](https://docs.developers.flagship.io/docs/decision-mode#self-hosted-api)
+- [docs](https://docs.developers.flagship.io/docs/run-on-premise)
 
 ## Licence
 
