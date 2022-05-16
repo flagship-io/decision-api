@@ -15,6 +15,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/handlers"
 	"github.com/flagship-io/decision-api/pkg/handlers/middlewares"
 	"github.com/flagship-io/decision-api/pkg/models"
+	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -101,13 +102,16 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	docs.SwaggerInfo.Version = models.Version
 
 	serverOptions := &ServerOptions{
-		logger:             logger.New("error", "server"),
-		environmentLoader:  environment_loaders.NewCDNLoader(),
+		logger: logger.New(config.LoggerLevel, "server"),
+		environmentLoader: environment_loaders.NewCDNLoader(
+			environment_loaders.WithPollingInterval(config.CDNLoaderPollingInterval),
+		),
 		hitsProcessor:      hits_processors.NewDataCollectProcessor(),
 		assignmentsManager: &assignments_managers.EmptyManager{},
 		corsOptions: &models.CorsOptions{
-			Enabled:        true,
-			AllowedOrigins: "*",
+			Enabled:        config.ServerCorsEnabled,
+			AllowedOrigins: config.ServerCorsAllowedOrigins,
+			AllowedHeaders: config.ServerCorsAllowedHeaders,
 		},
 		recover: true,
 	}
