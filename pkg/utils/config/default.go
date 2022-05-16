@@ -6,6 +6,7 @@ const (
 	ServerAddress            = ":8080"
 	ServerCorsEnabled        = true
 	ServerCorsAllowedOrigins = "*"
+	ServerCorsAllowedHeaders = "Content-Type,Authorization,X-Api-Key,X-Sdk-Client,X-Sdk-Version,X-Pop"
 	LoggerLevel              = "warning"
 	LoggerFormat             = "text"
 

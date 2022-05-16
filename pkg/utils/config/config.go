@@ -19,6 +19,7 @@ func NewFromFilename(name string) (*Config, error) {
 	v.SetDefault("address", ServerAddress)
 	v.SetDefault("cors.enabled", ServerCorsEnabled)
 	v.SetDefault("cors.allowed_origins", ServerCorsAllowedOrigins)
+	v.SetDefault("cors.allowed_headers", ServerCorsAllowedHeaders)
 	v.SetDefault("log.level", LoggerLevel)
 	v.SetDefault("log.format", LoggerFormat)
 	v.SetDefault("polling_interval", CDNLoaderPollingInterval)

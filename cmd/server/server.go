@@ -54,6 +54,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors.enabled"),
 			AllowedOrigins: cfg.GetStringDefault("cors.allowed_origins", config.ServerCorsAllowedOrigins),
+			AllowedHeaders: cfg.GetStringDefault("cors.allowed_headers", config.ServerCorsAllowedHeaders),
 		}),
 	)
 }
