@@ -36,7 +36,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 	log.Info("initializing assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)
 	if err != nil {
-		log.Fatalf("error occured when initializing assignment cache manager: %v", err)
+		log.Fatalf("error occurred when initializing assignment cache manager: %v", err)
 	}
 
 	return server.CreateServer(
@@ -54,6 +54,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors.enabled"),
 			AllowedOrigins: cfg.GetStringDefault("cors.allowed_origins", config.ServerCorsAllowedOrigins),
+			AllowedHeaders: cfg.GetStringDefault("cors.allowed_headers", config.ServerCorsAllowedHeaders),
 		}),
 	)
 }

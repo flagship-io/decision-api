@@ -125,7 +125,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	err = (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(response, conf)
 
 	if err != nil {
-		return fmt.Errorf("an error occured when parsing environment: %v", err)
+		return fmt.Errorf("an error occurred when parsing environment: %v", err)
 	}
 
 	campaigns := []*common.Campaign{}

@@ -37,7 +37,7 @@ func TestCheckErrorBody(t *testing.T) {
 func TestCheckErrorBodyMultiple(t *testing.T) {
 	resp := CheckErrorBodyMultiple(&activate_request.ActivateRequestMultiple{
 		Activations: []*activate_request.ActivateRequestMultipleInner{
-			&activate_request.ActivateRequestMultipleInner{},
+			{},
 		},
 	})
 
@@ -51,7 +51,7 @@ func TestCheckErrorBodyMultiple(t *testing.T) {
 		EnvironmentId: "env_id",
 		VisitorId:     "vis_id",
 		Activations: []*activate_request.ActivateRequestMultipleInner{
-			&activate_request.ActivateRequestMultipleInner{
+			{
 				VariationGroupId: "vg_id",
 				VariationId:      "v_id",
 			},

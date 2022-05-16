@@ -15,6 +15,7 @@ func TestNewFromFilename(t *testing.T) {
 	assert.Equal(t, cfg.GetString("address"), ServerAddress)
 	assert.Equal(t, cfg.GetBool("cors.enabled"), ServerCorsEnabled)
 	assert.Equal(t, cfg.GetString("cors.allowed_origins"), ServerCorsAllowedOrigins)
+  assert.Equal(t, cfg.GetString("cors.allowed_headers"), ServerCorsAllowedHeaders)
 	assert.Equal(t, cfg.GetString("log.level"), LoggerLevel)
 	assert.Equal(t, cfg.GetString("log.format"), LoggerFormat)
 	assert.Equal(t, cfg.GetDuration("polling_interval"), CDNLoaderPollingInterval)

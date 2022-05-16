@@ -7,6 +7,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,8 +23,12 @@ func TestCreateServer(t *testing.T) {
 	assert.NotNil(t, err)
 
 	apiKey = "api_key"
-	_, err = CreateServer(envID, apiKey, ":8080")
+	server, err := CreateServer(envID, apiKey, ":8080")
 	assert.Nil(t, err)
+	assert.Equal(t, config.ServerCorsEnabled, server.options.corsOptions.Enabled)
+	assert.Equal(t, config.ServerCorsAllowedOrigins, server.options.corsOptions.AllowedOrigins)
+	assert.Equal(t, config.ServerCorsAllowedHeaders, server.options.corsOptions.AllowedHeaders)
+	assert.Equal(t, config.LoggerLevel, server.options.logger.Logger.Level.String())
 
 	_, err = CreateServer(envID, apiKey, ":8080", WithAssignmentsManager(nil))
 	assert.NotNil(t, err)
@@ -41,7 +46,7 @@ func TestCreateServer(t *testing.T) {
 	hitsProcessor := &hits_processors.MockHitProcessor{}
 	environmentLoader := &environment_loaders.MockLoader{}
 	log := logger.New("debug", "test")
-	server, err := CreateServer(
+	server, err = CreateServer(
 		envID,
 		apiKey,
 		":8080",

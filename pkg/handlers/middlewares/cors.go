@@ -10,7 +10,7 @@ func Cors(corsOptions *models.CorsOptions, handler func(http.ResponseWriter, *ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		if corsOptions != nil && corsOptions.Enabled {
 			w.Header().Set("Access-Control-Allow-Origin", corsOptions.AllowedOrigins)
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Headers", corsOptions.AllowedHeaders)
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(200)
 				return
