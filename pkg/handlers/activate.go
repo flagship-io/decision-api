@@ -91,7 +91,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		if shouldPersistActivation {
 			go func(errors chan error) {
 				if !context.AssignmentsManager.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
-					AssignmentScope: connectors.Decision,
+					AssignmentScope: connectors.Activation,
 				}) {
 					return
 				}
