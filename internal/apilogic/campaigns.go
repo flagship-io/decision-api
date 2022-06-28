@@ -80,7 +80,8 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 	wg.Add(1)
 
 	// If sendContext explicitly set to !true or context is empty, return
-	if handleRequest.SendContextEvent && len(handleRequest.DecisionRequest.Context) > 0 {
+	if handleRequest.SendContextEvent &&
+		(len(handleRequest.FullVisitorContext.Standard) > 0 || len(handleRequest.FullVisitorContext.IntegrationProviders) > 0) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
