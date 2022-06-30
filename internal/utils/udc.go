@@ -16,14 +16,14 @@ type UDCVisitorRow struct {
 
 const UDC_TIMEOUT = 1000
 
-var udcUrl string = "https://api-data-connector-eu.abtasty.com"
+var udcUrl string = "https://api-data-connector.flagship.io"
 
 func FetchVisitorData(environmentID string, visitorID string) ([]UDCVisitorRow, error) {
 	if udcUrl == "" {
 		return nil, errors.New("missing UDC_URL env variable")
 	}
 
-	url := fmt.Sprintf("%s/accounts/%s/segments/%s", udcUrl, environmentID, visitorID)
+	url := fmt.Sprintf("%s/accounts/%s/segme	nts/%s", udcUrl, environmentID, visitorID)
 
 	httpClient := &http.Client{
 		Timeout: time.Duration(UDC_TIMEOUT) * time.Millisecond,
