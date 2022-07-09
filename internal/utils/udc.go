@@ -23,7 +23,7 @@ func FetchVisitorData(environmentID string, visitorID string) ([]UDCVisitorRow, 
 		return nil, errors.New("missing UDC_URL env variable")
 	}
 
-	url := fmt.Sprintf("%s/accounts/%s/segme	nts/%s", udcUrl, environmentID, visitorID)
+	url := fmt.Sprintf("%s/accounts/%s/segments/%s", udcUrl, environmentID, visitorID)
 
 	httpClient := &http.Client{
 		Timeout: time.Duration(UDC_TIMEOUT) * time.Millisecond,
