@@ -8,7 +8,6 @@ require (
 	github.com/flagship-io/flagship-proto v0.0.15
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/prologic/bitcask v0.3.10
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
@@ -18,8 +17,11 @@ require (
 )
 
 require (
+	git.mills.io/prologic/bitcask v1.0.2 // indirect
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
+	github.com/abcum/lcp v0.0.0-20201209214815-7a3f3840be81 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
+	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 )

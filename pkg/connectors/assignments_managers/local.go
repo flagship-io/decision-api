@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"git.mills.io/prologic/bitcask"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	common "github.com/flagship-io/flagship-common"
-	"github.com/prologic/bitcask"
 )
 
 // LocalManager represents the local db manager object
