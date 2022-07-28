@@ -56,12 +56,14 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			visitorID = activateRequest.Aid.Value
 		}
 
+		shouldPersistActivation := false
 		environment, err := context.EnvironmentLoader.LoadEnvironment(activateRequest.Cid, context.APIKey)
 		if err != nil {
 			log.Printf("Error when reading existing environment : %v", err)
+		} else {
+			shouldPersistActivation = environment.Common.CacheEnabled && environment.Common.SingleAssignment
 		}
 
-		shouldPersistActivation := environment.Common.CacheEnabled && environment.Common.SingleAssignment
 		assignments := map[string]*decision.VisitorCache{}
 		if shouldPersistActivation {
 			existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateRequest.Cid, activateRequest.Vid)
