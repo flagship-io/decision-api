@@ -16,7 +16,7 @@ type UDCVisitorRow struct {
 
 const UDC_TIMEOUT = 1000
 
-var udcUrl string = "https://api-data-connector-eu.abtasty.com"
+var udcUrl string = "https://api-data-connector.flagship.io"
 
 func FetchVisitorData(environmentID string, visitorID string) ([]UDCVisitorRow, error) {
 	if udcUrl == "" {
