@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -33,7 +32,7 @@ func TestActivate(t *testing.T) {
 	Activate(context)(w, req)
 
 	resp := w.Result()
-	bodyResp, _ := ioutil.ReadAll(resp.Body)
+	bodyResp, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, 400, resp.StatusCode)
 	assert.Contains(t, string(bodyResp), "unknown field")
 
@@ -50,7 +49,7 @@ func TestActivate(t *testing.T) {
 	Activate(context)(w, req)
 
 	resp = w.Result()
-	bodyResp, _ = ioutil.ReadAll(resp.Body)
+	bodyResp, _ = io.ReadAll(resp.Body)
 	assert.Equal(t, 400, resp.StatusCode)
 	assert.Contains(t, string(bodyResp), "Field is mandatory")
 
