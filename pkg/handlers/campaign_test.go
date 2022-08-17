@@ -93,7 +93,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	resp := w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(t, string(body), `"variation":`)
 
 	// other modification type returns json format
@@ -104,7 +104,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	assert.Contains(t, string(body), `"variation":`)
 
 	// html type with single fields returns text/html with html value
@@ -117,7 +117,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "text/html", resp.Header.Get("Content-Type"))
 
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	assert.Equal(t, "value", string(body))
 
 	// text type with single fields returns text/plain withs stringified bool value
@@ -130,7 +130,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "text/plain", resp.Header.Get("Content-Type"))
 
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	assert.Equal(t, "true", string(body))
 
 	// text type with single fields returns text/plain withs stringified number value
@@ -139,6 +139,6 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
 
 	resp = w.Result()
-	body, _ = ioutil.ReadAll(resp.Body)
+	body, _ = io.ReadAll(resp.Body)
 	assert.Equal(t, "20.5", string(body))
 }
