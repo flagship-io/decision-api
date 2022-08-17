@@ -2,7 +2,7 @@ package environment_loaders
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -116,7 +116,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 		return nil
 	}
 
-	response, err := ioutil.ReadAll(resp.Body)
+	response, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("error when reading body: %v", err)
 	}

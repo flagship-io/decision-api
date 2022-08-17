@@ -2,7 +2,7 @@ package hits_processors
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -36,7 +36,7 @@ func TestDataCollectTrack(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Send response to be tested
 		lock.Lock()
-		lastBodySent, _ := ioutil.ReadAll(req.Body)
+		lastBodySent, _ := io.ReadAll(req.Body)
 		bodySents = append(bodySents, string(lastBodySent))
 		_, err := rw.Write([]byte("{}"))
 		assert.Nil(t, err)
