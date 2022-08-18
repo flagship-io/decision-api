@@ -46,9 +46,9 @@ func WithPollingInterval(pollingInterval time.Duration) CDNLoaderOptionBuilder {
 	}
 }
 
-func WithLogLevel(lvl string) CDNLoaderOptionBuilder {
+func WithLogger(lvl string, fmt logger.LogFormat) CDNLoaderOptionBuilder {
 	return func(l *CDNLoader) {
-		l.logger = logger.New(lvl, logName)
+		l.logger = logger.New(lvl, fmt, logName)
 	}
 }
 
@@ -64,7 +64,7 @@ func NewCDNLoader(opts ...CDNLoaderOptionBuilder) *CDNLoader {
 		httpClient:      &http.Client{},
 		timeout:         defaultTimeout,
 		pollingInternal: defaultPollingInterval,
-		logger:          logger.New(logrus.WarnLevel.String(), logName),
+		logger:          logger.New(logrus.WarnLevel.String(), logger.FORMAT_TEXT, logName),
 		lock:            &sync.RWMutex{},
 	}
 

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	"github.com/flagship-io/flagship-proto/bucketing"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/flagship-io/flagship-proto/targeting"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -66,7 +66,7 @@ func TestNewCDNLoader(t *testing.T) {
 	defer server.Close()
 
 	httpClient := &http.Client{}
-	loader := NewCDNLoader(WithBaseURL(server.URL), WithLogLevel(logrus.DebugLevel.String()), WithPollingInterval(time.Second*1), WithHTTPClient(httpClient))
+	loader := NewCDNLoader(WithBaseURL(server.URL), WithLogger("debug", logger.FORMAT_TEXT), WithPollingInterval(time.Second*1), WithHTTPClient(httpClient))
 
 	assert.NotNil(t, loader)
 	assert.Equal(t, server.URL, loader.baseURL)

@@ -45,7 +45,7 @@ func TestCreateServer(t *testing.T) {
 	assignmentManager := assignments_managers.InitMemoryManager()
 	hitsProcessor := &hits_processors.MockHitProcessor{}
 	environmentLoader := &environment_loaders.MockLoader{}
-	log := logger.New("debug", "test")
+	log := logger.New("debug", logger.FORMAT_TEXT, "test")
 	server, err = CreateServer(
 		envID,
 		apiKey,

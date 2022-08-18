@@ -30,6 +30,7 @@ type RedisOptions struct {
 	TLSConfig *tls.Config
 	Db        int
 	LogLevel  string
+	LogFormat logger.LogFormat
 	TTL       time.Duration
 }
 
@@ -37,7 +38,7 @@ var rdb *redis.Client
 var ctx = context.Background()
 
 func InitRedisManager(options RedisOptions) (*RedisManager, error) {
-	logger := logger.New(options.LogLevel, "redis")
+	logger := logger.New(options.LogLevel, options.LogFormat, "redis")
 	logger.Info("Connecting to server...")
 	rdb = redis.NewClient(&redis.Options{
 		Addr:      options.Host,

@@ -19,7 +19,7 @@ func TestDataCollectBuilder(t *testing.T) {
 	httpClient := &http.Client{}
 	dc := NewDataCollectProcessor(
 		WithBatchOptions(50, time.Second),
-		WithLogLevel("debug"),
+		WithLogger("debug", "json"),
 		WithTrackingURL("https://tracking-url.dev"),
 		WithHTTPClient(httpClient))
 
