@@ -10,9 +10,18 @@
 **Visit [https://docs.developers.flagship.io/](https://docs.developers.flagship.io/) to get started with Flagship.**
 
 ## Disclaimer
-THIS PROJECT IS IN EARLY ADOPTER PHASE. USE AT YOUR OWN RISK.
 
-CONTACT THE FLAGSHIP TEAM FOR MORE INFORMATION
+> :warning: **Early adoption phase**
+>
+> This project is in early adopter phase. Use at your own risk.
+>
+> Contact the flagship team for more information.
+
+> :warning: **Consent Management**
+>
+> Consent management and verification must be handled on your side.
+>
+> Note that it is mandatory to collect visitor consent before tracking them and collecting their data. This is why you must not call Flagship and the Self Hosted API until user consent has been given.
 
 ## Docs
 
