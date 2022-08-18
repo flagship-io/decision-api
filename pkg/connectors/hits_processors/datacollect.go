@@ -52,9 +52,9 @@ func WithTrackingURL(url string) DatacollectOptionBuilder {
 	}
 }
 
-func WithLogLevel(lvl string) DatacollectOptionBuilder {
+func WithLogger(lvl string, fmt logger.LogFormat) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
-		l.logger = logger.New(lvl, logName)
+		l.logger = logger.New(lvl, fmt, logName)
 	}
 }
 
@@ -70,7 +70,7 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 		batchSize:      defaultBatchSize,
 		hits:           []models.MappableHit{},
 		trackingURL:    defaultTrackingURL,
-		logger:         logger.New(defaultLogLevel, logName),
+		logger:         logger.New(defaultLogLevel, logger.FORMAT_TEXT, logName),
 		httpClient: &http.Client{
 			Timeout: 2 * time.Second,
 		},

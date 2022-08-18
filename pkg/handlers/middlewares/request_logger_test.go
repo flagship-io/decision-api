@@ -24,7 +24,7 @@ func TestRequestLogger(t *testing.T) {
 	w := httptest.NewRecorder()
 	var b bytes.Buffer
 	mockWriter := bufio.NewWriter(&b)
-	logger := logger.New("debug", "test")
+	logger := logger.New("debug", logger.FORMAT_TEXT, "test")
 	logger.Logger.SetOutput(mockWriter)
 
 	url, _ := url.Parse("http://fakeurl.com")

@@ -25,7 +25,7 @@ func TestDynamoAssignmentsManager(t *testing.T) {
 			PrimaryKeyField:     "id",
 			GetItemTimeout:      10 * time.Millisecond,
 		},
-		logger: logger.New("info", "dynamodbManager"),
+		logger: logger.New("info", logger.FORMAT_TEXT, "dynamodbManager"),
 	}
 
 	assignments, err := d.LoadAssignments(envID, visitorID)
