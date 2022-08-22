@@ -28,7 +28,8 @@ func BuildHandleRequest(req *http.Request) (*handle.Request, error) {
 		handleRequest.ExposeAllKeys = exposeAllKeys == "true"
 	}
 
-	handleRequest.SendContextEvent = req.URL.Query().Get("sendContextEvent") != "false"
+	hasVisitorConsented := decisionRequest.VisitorConsent == nil || decisionRequest.VisitorConsent.GetValue()
+	handleRequest.SendContextEvent = req.URL.Query().Get("sendContextEvent") != "false" && hasVisitorConsented
 	handleRequest.DecisionRequest = decisionRequest
 	handleRequest.FullVisitorContext = &targeting.Context{
 		Standard:             decisionRequest.GetContext(),

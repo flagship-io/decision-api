@@ -164,6 +164,10 @@ github.com/flagship-io/flagship-common v0.0.18-beta.1 h1:CBo4xCpGG4ui77GhGcOmejA
 github.com/flagship-io/flagship-common v0.0.18-beta.1/go.mod h1:9NsiiubOPN6ZD8T4VvrSSwOWTloHTkoWftvRnmr4W7Y=
 github.com/flagship-io/flagship-proto v0.0.15 h1:2sK9DWtnTkUEBiGtjLdwhMaaGsXuU+QRmAOhxlwj7bQ=
 github.com/flagship-io/flagship-proto v0.0.15/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
+github.com/flagship-io/flagship-proto v0.0.16-0.20220816134540-8b1aa2ad5a0a h1:4FmZvUtZ2KjDD7V7nSJFodiAH7RYKUnMd0EQvHCFEYU=
+github.com/flagship-io/flagship-proto v0.0.16-0.20220816134540-8b1aa2ad5a0a/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
+github.com/flagship-io/flagship-proto v0.0.16 h1:Mz/ljPweSR44Ek0moW5/yHPDz5DZO4fPTp+zHzC9nzQ=
+github.com/flagship-io/flagship-proto v0.0.16/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/franela/goblin v0.0.0-20210519012713-85d372ac71e2/go.mod h1:VzmDKDJVZI3aJmnRI9VjAn9nJ8qPPsN1fqzr9dqInIo=
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=
