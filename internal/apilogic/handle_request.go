@@ -2,6 +2,7 @@ package apilogic
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/flagship-io/decision-api/internal/handle"
 	"github.com/flagship-io/decision-api/internal/utils"
@@ -23,6 +24,11 @@ func BuildHandleRequest(req *http.Request) (*handle.Request, error) {
 		handleRequest.Mode = mode
 	}
 
+	// exposeAllKeys default true for flags route
+	if strings.Contains(req.URL.String(), "/flags") {
+		handleRequest.ExposeAllKeys = true
+	}
+	// exposeAllKeys url param extend
 	exposeAllKeys := req.URL.Query().Get("exposeAllKeys")
 	if exposeAllKeys != "" {
 		handleRequest.ExposeAllKeys = exposeAllKeys == "true"

@@ -12,9 +12,12 @@ import (
 
 // FlagMetadata represents the metadata informations about a flag key
 type FlagMetadata struct {
-	CampaignID       string `json:"campaignId"`
-	VariationGroupID string `json:"variationGroupId"`
-	VariationID      string `json:"variationId"`
+	CampaignID       string  `json:"campaignId"`
+	Slug             *string `json:"slug"`
+	Type             string  `json:"type"`
+	VariationGroupID string  `json:"variationGroupId"`
+	VariationID      string  `json:"variationId"`
+	Reference        bool    `json:"reference"`
 }
 
 // FlagInfo represents the informations about a flag key
@@ -56,13 +59,19 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 	for _, c := range decisionResponse.Campaigns {
 		if c.GetVariation() != nil && c.GetVariation().GetModifications() != nil && c.GetVariation().GetModifications().GetValue() != nil && c.GetVariation().GetModifications().GetValue().GetFields() != nil {
 			for k, v := range c.GetVariation().GetModifications().GetValue().GetFields() {
+				mdata := FlagMetadata{
+					CampaignID:       c.GetId().Value,
+					Type:             c.GetType().Value,
+					VariationGroupID: c.GetVariationGroupId().Value,
+					VariationID:      c.GetVariation().GetId().Value,
+					Reference:        c.GetVariation().GetReference(),
+				}
+				if c.GetSlug() != nil {
+					mdata.Slug = &c.GetSlug().Value
+				}
 				flagInfos[k] = &FlagInfo{
-					Value: v,
-					Metadata: FlagMetadata{
-						CampaignID:       c.GetId().Value,
-						VariationGroupID: c.GetVariationGroupId().Value,
-						VariationID:      c.GetVariation().GetId().Value,
-					},
+					Value:    v,
+					Metadata: mdata,
 				}
 			}
 		}
