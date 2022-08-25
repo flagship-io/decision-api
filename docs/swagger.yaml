@@ -1,5 +1,26 @@
 basePath: /v2
 definitions:
+  handlers.FlagInfo:
+    properties:
+      metadata:
+        $ref: '#/definitions/handlers.FlagMetadata'
+      value: {}
+    type: object
+  handlers.FlagMetadata:
+    properties:
+      campaignId:
+        type: string
+      reference:
+        type: boolean
+      slug:
+        type: string
+      type:
+        type: string
+      variationGroupId:
+        type: string
+      variationId:
+        type: string
+    type: object
   handlers.MetricsResponse:
     properties:
       cmdline:
@@ -63,6 +84,8 @@ definitions:
       context:
         $ref: '#/definitions/handlers.campaignsBodyContextSwagger'
       trigger_hit:
+        type: boolean
+      visitor_consent:
         type: boolean
       visitor_id:
         type: string
@@ -210,6 +233,39 @@ paths:
       summary: Get a single campaigns for the visitor
       tags:
       - Campaigns
+  /flags:
+    post:
+      consumes:
+      - application/json
+      description: Get all flags value and metadata for a visitor ID and context
+      operationId: get-flags
+      parameters:
+      - description: Flag request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.campaignsBodySwagger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/handlers.FlagInfo'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorMessage'
+      summary: Get all flags
+      tags:
+      - Flags
   /metrics:
     get:
       description: Gets the metrics like memory consumption & allocation as well as
