@@ -35,6 +35,8 @@ func New(lvl string, fmt LogFormat, component string) *Logger {
 	} else {
 		l.SetLevel(parsedLvl)
 	}
+	entry := l.WithField("component", component)
+	entry.Level = parsedLvl
 
-	return &Logger{l.WithField("component", component)}
+	return &Logger{entry}
 }
