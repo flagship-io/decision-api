@@ -51,3 +51,42 @@ func TestBuildHandleRequestHasCorrectSendContextEvent(t *testing.T) {
 	}
 
 }
+
+func TestBuildHandleRequestHasCorrectExposeAllKeys(t *testing.T) {
+	tests := map[string]struct {
+		path   string
+		query  string
+		result bool
+	}{
+		"FlagRouteUrlParamEmpty":      {"/v2/flags", "", true},
+		"FlagRouteUrlParamTrue":       {"/v2/flags", "exposeAllKeys=true", true},
+		"FlagRouteUrlParamFalse":      {"/v2/flags", "exposeAllKeys=false", false},
+		"CampaignsRouteUrlParamFalse": {"/v2/campaigns", "", false},
+		"CampaignsRouteUrlParamTrue":  {"/v2/campaigns", "exposeAllKeys=true", true},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			body := `{
+				"visitor_id": "123",
+				"context": {}
+			}`
+
+			req := &http.Request{
+				URL: &url.URL{
+					Path:     test.path,
+					RawQuery: test.query,
+				},
+				Body:   io.NopCloser(strings.NewReader(body)),
+				Method: "POST",
+			}
+
+			hr, err := BuildHandleRequest(req)
+
+			assert.NotNil(t, hr)
+			assert.Nil(t, err)
+			assert.Equal(t, test.result, hr.ExposeAllKeys)
+		})
+	}
+
+}
