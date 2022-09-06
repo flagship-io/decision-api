@@ -33,10 +33,11 @@ type campaignsBodyContextSwagger struct {
 
 //nolint
 type campaignsBodySwagger struct {
-	VisitorID   string                      `json:"visitor_id" binding:"required"`
-	AnonymousID *string                     `json:"anonymous_id"`
-	Context     campaignsBodyContextSwagger `json:"context"`
-	TriggerHit  bool                        `json:"trigger_hit"`
+	VisitorID      string                      `json:"visitor_id" binding:"required"`
+	AnonymousID    *string                     `json:"anonymous_id"`
+	Context        campaignsBodyContextSwagger `json:"context"`
+	VisitorConsent bool                        `json:"visitor_consent"`
+	TriggerHit     bool                        `json:"trigger_hit"`
 }
 
 // nolint

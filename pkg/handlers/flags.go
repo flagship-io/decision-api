@@ -12,9 +12,12 @@ import (
 
 // FlagMetadata represents the metadata informations about a flag key
 type FlagMetadata struct {
-	CampaignID       string `json:"campaignId"`
-	VariationGroupID string `json:"variationGroupId"`
-	VariationID      string `json:"variationId"`
+	CampaignID       string  `json:"campaignId"`
+	Slug             *string `json:"slug"`
+	Type             string  `json:"type"`
+	VariationGroupID string  `json:"variationGroupId"`
+	VariationID      string  `json:"variationId"`
+	Reference        bool    `json:"reference"`
 }
 
 // FlagInfo represents the informations about a flag key
@@ -23,18 +26,18 @@ type FlagInfo struct {
 	Metadata FlagMetadata `json:"metadata"`
 }
 
-// // Flags returns a flags handler
-// // @Summary Get all flags
-// // @Tags Flags
-// // @Description Get all flags value and metadata for a visitor ID and context
-// // @ID get-flags
-// // @Accept  json
-// // @Produce  json
-// // @Param request body campaignsBodySwagger true "Flag request body"
-// // @Success 200 {object} map[string]FlagInfo{}
-// // @Failure 400 {object} errorMessage
-// // @Failure 500 {object} errorMessage
-// // @Router /flags [post]
+// Flags returns a flags handler
+// @Summary Get all flags
+// @Tags Flags
+// @Description Get all flags value and metadata for a visitor ID and context
+// @ID get-flags
+// @Accept  json
+// @Produce  json
+// @Param request body campaignsBodySwagger true "Flag request body"
+// @Success 200 {object} map[string]FlagInfo{}
+// @Failure 400 {object} errorMessage
+// @Failure 500 {object} errorMessage
+// @Router /flags [post]
 func Flags(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		apilogic.HandleCampaigns(w, req, context, requestFlagsHandler, utils.NewTracker())
@@ -56,13 +59,19 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 	for _, c := range decisionResponse.Campaigns {
 		if c.GetVariation() != nil && c.GetVariation().GetModifications() != nil && c.GetVariation().GetModifications().GetValue() != nil && c.GetVariation().GetModifications().GetValue().GetFields() != nil {
 			for k, v := range c.GetVariation().GetModifications().GetValue().GetFields() {
+				mdata := FlagMetadata{
+					CampaignID:       c.GetId().Value,
+					Type:             c.GetType().Value,
+					VariationGroupID: c.GetVariationGroupId().Value,
+					VariationID:      c.GetVariation().GetId().Value,
+					Reference:        c.GetVariation().GetReference(),
+				}
+				if c.GetSlug() != nil {
+					mdata.Slug = &c.GetSlug().Value
+				}
 				flagInfos[k] = &FlagInfo{
-					Value: v,
-					Metadata: FlagMetadata{
-						CampaignID:       c.GetId().Value,
-						VariationGroupID: c.GetVariationGroupId().Value,
-						VariationID:      c.GetVariation().GetId().Value,
-					},
+					Value:    v,
+					Metadata: mdata,
 				}
 			}
 		}
