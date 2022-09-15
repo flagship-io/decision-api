@@ -160,8 +160,14 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fatih/color v1.12.0/go.mod h1:ELkj/draVOlAH/xkhN6mQ50Qd0MPOk5AAr3maGEBuJM=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
+github.com/flagship-io/flagship-common v0.0.18-0.20220912161018-f6031ad03916 h1:k3tTon6xtOpDqVv/Cqnf3StSu/Cv21m/iIhXaJs+7sQ=
+github.com/flagship-io/flagship-common v0.0.18-0.20220912161018-f6031ad03916/go.mod h1:9NsiiubOPN6ZD8T4VvrSSwOWTloHTkoWftvRnmr4W7Y=
 github.com/flagship-io/flagship-common v0.0.18-beta.1 h1:CBo4xCpGG4ui77GhGcOmejAEnCXfcUKHsbp5MVYaeqM=
 github.com/flagship-io/flagship-common v0.0.18-beta.1/go.mod h1:9NsiiubOPN6ZD8T4VvrSSwOWTloHTkoWftvRnmr4W7Y=
+github.com/flagship-io/flagship-common v0.0.18-beta.1.0.20220913071102-09ef3d7e1e79 h1:kMQMsEjrmWgZrFh13lbjXse1tp4oDTyf0vCCNQNf940=
+github.com/flagship-io/flagship-common v0.0.18-beta.1.0.20220913071102-09ef3d7e1e79/go.mod h1:9NsiiubOPN6ZD8T4VvrSSwOWTloHTkoWftvRnmr4W7Y=
+github.com/flagship-io/flagship-common v0.0.18-beta.2 h1:F+BSIeKUSHvV6Ybv37u1I+VJvSfaQqtgiO14+6an7co=
+github.com/flagship-io/flagship-common v0.0.18-beta.2/go.mod h1:9NsiiubOPN6ZD8T4VvrSSwOWTloHTkoWftvRnmr4W7Y=
 github.com/flagship-io/flagship-proto v0.0.15 h1:2sK9DWtnTkUEBiGtjLdwhMaaGsXuU+QRmAOhxlwj7bQ=
 github.com/flagship-io/flagship-proto v0.0.15/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
 github.com/flagship-io/flagship-proto v0.0.16-0.20220816134540-8b1aa2ad5a0a h1:4FmZvUtZ2KjDD7V7nSJFodiAH7RYKUnMd0EQvHCFEYU=
