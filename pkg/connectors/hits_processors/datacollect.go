@@ -16,7 +16,7 @@ import (
 
 const defaultBatchingWindow = time.Second * 30
 const defaultBatchSize = 50
-const defaultTrackingURL = "https://ariane.abtasty.com"
+const defaultTrackingURL = "https://events.flagship.io"
 const defaultLogLevel = "error"
 const logName = "DataCollect Processor"
 
