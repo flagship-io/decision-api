@@ -161,7 +161,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	}
 
 	// set the logger for common package
-	commonLogger := logger.New(config.LoggerLevel, config.LoggerFormat, "common")
+	commonLogger := logger.New(serverOptions.logger.Level.String(), config.LoggerFormat, "common")
 	common.SetLogger(&common.DefaultLogger{
 		Entry: commonLogger.Entry,
 	})
