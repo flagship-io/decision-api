@@ -114,7 +114,7 @@ func CreateMockDecisionContext() *connectors.DecisionContext {
 	return &connectors.DecisionContext{
 		EnvID:  "env_id_1",
 		APIKey: "api_key_id",
-		Logger: logger.New("debug", "mock"),
+		Logger: logger.New("debug", logger.FORMAT_TEXT, "mock"),
 		Connectors: connectors.Connectors{
 			HitsProcessor:      &hits_processors.MockHitProcessor{},
 			AssignmentsManager: assignments_managers.InitMemoryManager(),

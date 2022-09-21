@@ -76,6 +76,7 @@ func TestCampaign(t *testing.T) {
 }
 
 func TestSendSingleFormatResponse(t *testing.T) {
+	logger := logger.New("debug", logger.FORMAT_TEXT, "test")
 	// json format
 	w := httptest.NewRecorder()
 	campaign := &decision_response.Campaign{
@@ -88,7 +89,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 			},
 		},
 	}
-	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+	sendSingleFormatResponse(w, campaign, logger)
 
 	resp := w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -99,7 +100,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	// other modification type returns json format
 	w = httptest.NewRecorder()
 	campaign.Variation.Modifications.Type = decision_response.ModificationsType_JSON
-	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+	sendSingleFormatResponse(w, campaign, logger)
 
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -111,7 +112,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	w = httptest.NewRecorder()
 	campaign.Variation.Modifications.Type = decision_response.ModificationsType_HTML
 	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewStringValue("value")
-	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+	sendSingleFormatResponse(w, campaign, logger)
 
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -124,7 +125,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	w = httptest.NewRecorder()
 	campaign.Variation.Modifications.Type = decision_response.ModificationsType_TEXT
 	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewBoolValue(true)
-	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+	sendSingleFormatResponse(w, campaign, logger)
 
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -136,7 +137,7 @@ func TestSendSingleFormatResponse(t *testing.T) {
 	// text type with single fields returns text/plain withs stringified number value
 	w = httptest.NewRecorder()
 	campaign.Variation.Modifications.Value.Fields["key"] = structpb.NewNumberValue(20.5)
-	sendSingleFormatResponse(w, campaign, logger.New("debug", "test"))
+	sendSingleFormatResponse(w, campaign, logger)
 
 	resp = w.Result()
 	body, _ = io.ReadAll(resp.Body)

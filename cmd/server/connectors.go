@@ -9,6 +9,7 @@ import (
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
+	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
 func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.AssignmentsManager, err error) {
@@ -30,7 +31,8 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 			Password:  cfg.GetStringDefault("cache.options.redisPassword", ""),
 			Db:        cfg.GetIntDefault("cache.options.redisDb", 0),
 			TTL:       cfg.GetDurationDefault("cache.options.redisTtl", 3*30*24*time.Hour),
-			LogLevel:  config.LoggerLevel,
+			LogLevel:  cfg.GetStringDefault("log.level", config.LoggerLevel),
+			LogFormat: logger.LogFormat(cfg.GetStringDefault("log.format", config.LoggerFormat)),
 			TLSConfig: tlsConfig,
 		})
 	case "dynamo":
@@ -42,7 +44,8 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 			PrimaryKeySeparator: cfg.GetStringDefault("cache.options.dynamoPKSeparator", "."),
 			PrimaryKeyField:     cfg.GetStringDefault("cache.options.dynamoPKField", "id"),
 			GetItemTimeout:      cfg.GetDurationDefault("cache.options.dynamoGetTimeout", 1*time.Second),
-			LogLevel:            config.LoggerLevel,
+			LogLevel:            cfg.GetStringDefault("log.level", config.LoggerLevel),
+			LogFormat:           logger.LogFormat(cfg.GetStringDefault("log.format", config.LoggerFormat)),
 		})
 	default:
 		assignmentsManager = &assignments_managers.EmptyManager{}
