@@ -15,7 +15,6 @@ import (
 	"github.com/flagship-io/decision-api/pkg/server"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
-	"github.com/sirupsen/logrus"
 )
 
 var shutdownTimeout = 3 * time.Second
@@ -23,16 +22,14 @@ var shutdownTimeout = 3 * time.Second
 func createLogger(cfg *config.Config) *logger.Logger {
 	lvl := cfg.GetStringDefault("log.level", config.LoggerLevel)
 	format := cfg.GetStringDefault("log.format", config.LoggerFormat)
-	log := logger.New(lvl, "server")
 
-	if format == "json" {
-		log.Logger.SetFormatter(&logrus.JSONFormatter{})
-	}
-	return log
+	return logger.New(lvl, logger.LogFormat(format), "Server")
 }
 
 func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error) {
-	logLvl := log.Logger.Level.String()
+	logLvl := cfg.GetStringDefault("log.level", config.LoggerLevel)
+	logFmt := cfg.GetStringDefault("log.format", config.LoggerFormat)
+
 	log.Info("initializing assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)
 	if err != nil {
@@ -46,10 +43,10 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		server.WithLogger(log),
 		server.WithEnvironmentLoader(
 			environment_loaders.NewCDNLoader(
-				environment_loaders.WithLogLevel(logLvl),
+				environment_loaders.WithLogger(logLvl, logger.LogFormat(logFmt)),
 				environment_loaders.WithPollingInterval(cfg.GetDuration("polling_interval"))),
 		),
-		server.WithHitsProcessor(hits_processors.NewDataCollectProcessor(hits_processors.WithLogLevel(logLvl))),
+		server.WithHitsProcessor(hits_processors.NewDataCollectProcessor(hits_processors.WithLogger(logLvl, logger.LogFormat(logFmt)))),
 		server.WithAssignmentsManager(assignmentManager),
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors.enabled"),

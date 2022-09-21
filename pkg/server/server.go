@@ -102,7 +102,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	docs.SwaggerInfo.Version = models.Version
 
 	serverOptions := &ServerOptions{
-		logger: logger.New(config.LoggerLevel, "server"),
+		logger: logger.New(config.LoggerLevel, config.LoggerFormat, "server"),
 		environmentLoader: environment_loaders.NewCDNLoader(
 			environment_loaders.WithPollingInterval(config.CDNLoaderPollingInterval),
 		),
@@ -161,8 +161,7 @@ func CreateServer(envID string, apiKey string, addr string, opts ...ServerOption
 	}
 
 	// set the logger for common package
-	commonLogger := logger.New(serverOptions.logger.Level.String(), "common")
-	commonLogger.Logger.SetFormatter(serverOptions.logger.Logger.Formatter)
+	commonLogger := logger.New(config.LoggerLevel, config.LoggerFormat, "common")
 	common.SetLogger(&common.DefaultLogger{
 		Entry: commonLogger.Entry,
 	})

@@ -23,6 +23,7 @@ type DynamoManagerOptions struct {
 	PrimaryKeyField     string
 	GetItemTimeout      time.Duration
 	LogLevel            string
+	LogFormat           logger.LogFormat
 }
 
 type DynamoManager struct {
@@ -31,7 +32,7 @@ type DynamoManager struct {
 }
 
 func InitDynamoManager(options DynamoManagerOptions) *DynamoManager {
-	logger := logger.New(options.LogLevel, "dynamo")
+	logger := logger.New(options.LogLevel, options.LogFormat, "dynamo")
 	return &DynamoManager{
 		options: options,
 		logger:  logger,
