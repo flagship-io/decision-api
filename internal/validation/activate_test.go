@@ -32,31 +32,3 @@ func TestCheckErrorBody(t *testing.T) {
 
 	assert.Nil(t, resp)
 }
-
-// CheckErrorBodyMultiple checks a multiple activation request
-func TestCheckErrorBodyMultiple(t *testing.T) {
-	resp := CheckErrorBodyMultiple(&activate_request.ActivateRequestMultiple{
-		Activations: []*activate_request.ActivateRequestMultipleInner{
-			{},
-		},
-	})
-
-	assert.Equal(t, "error", resp.Status)
-	assert.Equal(t, "Field is mandatory.", resp.Errors["environment_id"])
-	assert.Equal(t, "Field is mandatory. It can be set globally or for each specific activation", resp.Errors["visitor_id"])
-	assert.Equal(t, "Field is mandatory.", resp.Errors["variation_id"])
-	assert.Equal(t, "Field is mandatory.", resp.Errors["variation_group_id"])
-
-	resp = CheckErrorBodyMultiple(&activate_request.ActivateRequestMultiple{
-		EnvironmentId: "env_id",
-		VisitorId:     "vis_id",
-		Activations: []*activate_request.ActivateRequestMultipleInner{
-			{
-				VariationGroupId: "vg_id",
-				VariationId:      "v_id",
-			},
-		},
-	})
-
-	assert.Nil(t, resp)
-}
