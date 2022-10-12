@@ -16,10 +16,12 @@ func BuildErrorResponse(bodyError map[string]string) *ErrorResponse {
 	}
 }
 
-func CheckErrorBody(body *activate_request.ActivateRequest) *ErrorResponse {
+func CheckErrorBody(envID string, body *activate_request.ActivateRequest) *ErrorResponse {
 	errorResponse := map[string]string{}
 	if body.Cid == "" {
 		errorResponse["cid"] = "Field is mandatory."
+	} else if envID != body.Cid {
+		errorResponse["cid"] = "Invalid cid."
 	}
 	if body.Vid == "" {
 		errorResponse["vid"] = "Field is mandatory."

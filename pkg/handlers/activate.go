@@ -48,6 +48,9 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			}
 
 			activateItems = activateRequestBatch.Batch
+			for _, activateItem := range activateItems {
+				activateItem.Cid = activateRequestBatch.Cid
+			}
 		} else {
 			activateItems = []*activate_request.ActivateRequest{activateRequest}
 		}
@@ -58,7 +61,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		campaignActivations := []*models.CampaignActivation{}
 
 		for _, activateItem := range activateItems {
-			if bodyErr := validation.CheckErrorBody(activateItem); bodyErr != nil {
+			if bodyErr := validation.CheckErrorBody(context.EnvID, activateItem); bodyErr != nil {
 				data, _ := json.Marshal(bodyErr)
 				utils.WriteClientError(w, http.StatusBadRequest, string(data))
 				return
