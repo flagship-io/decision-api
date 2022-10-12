@@ -15,15 +15,20 @@ func TestBuildErrorResponse(t *testing.T) {
 }
 
 func TestCheckErrorBody(t *testing.T) {
-	resp := CheckErrorBody(&activate_request.ActivateRequest{})
 
+	resp := CheckErrorBody("env_id", &activate_request.ActivateRequest{})
 	assert.Equal(t, "error", resp.Status)
 	assert.Equal(t, "Field is mandatory.", resp.Errors["cid"])
 	assert.Equal(t, "Field is mandatory.", resp.Errors["vid"])
 	assert.Equal(t, "Field is mandatory.", resp.Errors["caid"])
 	assert.Equal(t, "Field is mandatory.", resp.Errors["vaid"])
 
-	resp = CheckErrorBody(&activate_request.ActivateRequest{
+	resp = CheckErrorBody("fake", &activate_request.ActivateRequest{
+		Cid: "env_id",
+	})
+	assert.Equal(t, "Invalid cid.", resp.Errors["cid"])
+
+	resp = CheckErrorBody("env_id", &activate_request.ActivateRequest{
 		Cid:  "env_id",
 		Vid:  "visitor_id",
 		Caid: "campaign_id",

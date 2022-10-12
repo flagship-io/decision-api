@@ -108,16 +108,15 @@ func TestActivate(t *testing.T) {
 
 	// activate batch
 	body = `{
+		"cid": "env_id",
 		"batch": [
 			{
-				"cid": "env_id",
 				"aid": "anonymous_id",
 				"vid": "visitor_id",
 				"caid": "campaign_id",
 				"vaid": "variation_id"
 			},
 			{
-				"cid": "env_id",
 				"aid": "anonymous_id",
 				"vid": "visitor_id",
 				"caid": "campaign_id_2",
