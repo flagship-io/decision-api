@@ -16,10 +16,12 @@ func BuildErrorResponse(bodyError map[string]string) *ErrorResponse {
 	}
 }
 
-func CheckErrorBody(body *activate_request.ActivateRequest) *ErrorResponse {
+func CheckErrorBody(envID string, body *activate_request.ActivateRequest) *ErrorResponse {
 	errorResponse := map[string]string{}
 	if body.Cid == "" {
 		errorResponse["cid"] = "Field is mandatory."
+	} else if envID != body.Cid {
+		errorResponse["cid"] = "Invalid cid."
 	}
 	if body.Vid == "" {
 		errorResponse["vid"] = "Field is mandatory."
@@ -29,30 +31,6 @@ func CheckErrorBody(body *activate_request.ActivateRequest) *ErrorResponse {
 	}
 	if body.Caid == "" {
 		errorResponse["caid"] = "Field is mandatory."
-	}
-	if len(errorResponse) == 0 {
-		return nil
-	}
-	return BuildErrorResponse(errorResponse)
-}
-
-// CheckErrorBodyMultiple checks a multiple activation request
-func CheckErrorBodyMultiple(body *activate_request.ActivateRequestMultiple) *ErrorResponse {
-	errorResponse := map[string]string{}
-	if body.EnvironmentId == "" {
-		errorResponse["environment_id"] = "Field is mandatory."
-	}
-
-	for _, a := range body.Activations {
-		if a.VariationId == "" {
-			errorResponse["variation_id"] = "Field is mandatory."
-		}
-		if a.VariationGroupId == "" {
-			errorResponse["variation_group_id"] = "Field is mandatory."
-		}
-		if body.VisitorId == "" && a.VisitorId == "" {
-			errorResponse["visitor_id"] = "Field is mandatory. It can be set globally or for each specific activation"
-		}
 	}
 	if len(errorResponse) == 0 {
 		return nil

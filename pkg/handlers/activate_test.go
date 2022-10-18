@@ -53,6 +53,7 @@ func TestActivate(t *testing.T) {
 	assert.Equal(t, 400, resp.StatusCode)
 	assert.Contains(t, string(bodyResp), "Field is mandatory")
 
+	// activate simple
 	body = `{
 		"cid": "env_id",
 		"aid": "anonymous_id",
@@ -104,4 +105,50 @@ func TestActivate(t *testing.T) {
 	assert.Equal(t, "visitor_id", hitProcessor.TrackedHits.CampaignActivations[0].CustomerID)
 	assert.Equal(t, "anonymous_id", hitProcessor.TrackedHits.CampaignActivations[0].VisitorID)
 	assert.True(t, hitProcessor.TrackedHits.CampaignActivations[0].PersistActivate)
+
+	// activate batch
+	body = `{
+		"cid": "env_id",
+		"batch": [
+			{
+				"aid": "anonymous_id",
+				"vid": "visitor_id",
+				"caid": "campaign_id",
+				"vaid": "variation_id"
+			},
+			{
+				"aid": "anonymous_id",
+				"vid": "visitor_id",
+				"caid": "campaign_id_2",
+				"vaid": "variation_id_2"
+			}
+		]
+	}`
+	w = httptest.NewRecorder()
+	req.Body = io.NopCloser(strings.NewReader(body))
+	Activate(context)(w, req)
+
+	resp = w.Result()
+	assert.Equal(t, 204, resp.StatusCode)
+	cacheVisitor, err = assignmentManager.LoadAssignments("env_id", "visitor_id")
+	assert.Nil(t, err)
+	assert.Len(t, cacheVisitor.Assignments, 2)
+	assert.Equal(t, "variation_id", cacheVisitor.Assignments["campaign_id"].VariationID)
+	assert.Equal(t, "variation_id_2", cacheVisitor.Assignments["campaign_id_2"].VariationID)
+	assert.True(t, cacheVisitor.Assignments["campaign_id"].Activated)
+	assert.True(t, cacheVisitor.Assignments["campaign_id_2"].Activated)
+
+	assert.Len(t, hitProcessor.TrackedHits.CampaignActivations, 2)
+	assert.Equal(t, "variation_id", hitProcessor.TrackedHits.CampaignActivations[0].VariationID)
+	assert.Equal(t, "campaign_id", hitProcessor.TrackedHits.CampaignActivations[0].CampaignID)
+	assert.Equal(t, "env_id", hitProcessor.TrackedHits.CampaignActivations[0].EnvID)
+	assert.Equal(t, "visitor_id", hitProcessor.TrackedHits.CampaignActivations[0].CustomerID)
+	assert.Equal(t, "anonymous_id", hitProcessor.TrackedHits.CampaignActivations[0].VisitorID)
+	assert.Equal(t, "variation_id_2", hitProcessor.TrackedHits.CampaignActivations[1].VariationID)
+	assert.Equal(t, "campaign_id_2", hitProcessor.TrackedHits.CampaignActivations[1].CampaignID)
+	assert.Equal(t, "env_id", hitProcessor.TrackedHits.CampaignActivations[1].EnvID)
+	assert.Equal(t, "visitor_id", hitProcessor.TrackedHits.CampaignActivations[1].CustomerID)
+	assert.Equal(t, "anonymous_id", hitProcessor.TrackedHits.CampaignActivations[1].VisitorID)
+	assert.False(t, hitProcessor.TrackedHits.CampaignActivations[0].PersistActivate)
+	assert.True(t, hitProcessor.TrackedHits.CampaignActivations[1].PersistActivate)
 }

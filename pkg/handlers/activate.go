@@ -30,95 +30,111 @@ import (
 // @Router /activate [post]
 func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		activateRequest := &activate_request.ActivateRequest{}
+		var activateItems []*activate_request.ActivateRequest
+
 		data, err := io.ReadAll(req.Body)
 		if err != nil {
 			utils.WriteServerError(w, err)
 			return
 		}
 
+		// check body unique, if not check body multiple
+		activateRequest := &activate_request.ActivateRequest{}
 		if err := protojson.Unmarshal(data, activateRequest); err != nil {
-			utils.WriteClientError(w, http.StatusBadRequest, err.Error())
-			return
-		}
+			activateRequestBatch := &activate_request.ActivateRequestBatch{}
+			if err := protojson.Unmarshal(data, activateRequestBatch); err != nil {
+				utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+				return
+			}
 
-		if bodyErr := validation.CheckErrorBody(activateRequest); bodyErr != nil {
-			data, _ := json.Marshal(bodyErr)
-			utils.WriteClientError(w, http.StatusBadRequest, string(data))
-			return
-		}
-
-		now := time.Now()
-
-		visitorID := activateRequest.Vid
-		// If anonymous id is defined
-		if activateRequest.Aid != nil {
-			visitorID = activateRequest.Aid.Value
-		}
-
-		shouldPersistActivation := false
-		environment, err := context.EnvironmentLoader.LoadEnvironment(activateRequest.Cid, context.APIKey)
-		if err != nil {
-			log.Printf("Error when reading existing environment : %v", err)
+			activateItems = activateRequestBatch.Batch
+			for _, activateItem := range activateItems {
+				activateItem.Cid = activateRequestBatch.Cid
+			}
 		} else {
-			shouldPersistActivation = environment.Common.CacheEnabled && environment.Common.SingleAssignment
+			activateItems = []*activate_request.ActivateRequest{activateRequest}
 		}
 
-		assignments := map[string]*decision.VisitorCache{}
-		if shouldPersistActivation {
-			existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateRequest.Cid, activateRequest.Vid)
+		// error management & campaign activations
+		errorsLength := 0
+		errors := make(chan error)
+		campaignActivations := []*models.CampaignActivation{}
+
+		for _, activateItem := range activateItems {
+			if bodyErr := validation.CheckErrorBody(context.EnvID, activateItem); bodyErr != nil {
+				data, _ := json.Marshal(bodyErr)
+				utils.WriteClientError(w, http.StatusBadRequest, string(data))
+				return
+			}
+
+			now := time.Now()
+
+			visitorID := activateItem.Vid
+			// If anonymous id is defined
+			if activateItem.Aid != nil {
+				visitorID = activateItem.Aid.Value
+			}
+
+			shouldPersistActivation := false
+			environment, err := context.EnvironmentLoader.LoadEnvironment(activateItem.Cid, context.APIKey)
 			if err != nil {
-				log.Printf("Error when reading existing assignments : %v", err)
+				log.Printf("Error when reading existing environment : %v", err)
+			} else {
+				shouldPersistActivation = environment.Common.CacheEnabled && environment.Common.SingleAssignment
 			}
 
-			var vgAssign *decision.VisitorCache
-			if existingAssignments != nil {
-				vgAssign = existingAssignments.Assignments[activateRequest.Caid]
-			}
-
-			assignments[activateRequest.Caid] = &decision.VisitorCache{
-				VariationID: activateRequest.Vaid,
-				Activated:   true,
-			}
-			shouldPersistActivation = vgAssign == nil || !vgAssign.Activated || vgAssign.VariationID != activateRequest.Vaid
-		}
-
-		chanLength := 1
-		if shouldPersistActivation {
-			chanLength = 2
-		}
-
-		errors := make(chan error, chanLength)
-
-		if shouldPersistActivation {
-			go func(errors chan error) {
-				if !context.AssignmentsManager.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
-					AssignmentScope: connectors.Activation,
-				}) {
-					return
+			if shouldPersistActivation {
+				existingAssignments, err := context.AssignmentsManager.LoadAssignments(activateItem.Cid, activateItem.Vid)
+				if err != nil {
+					log.Printf("Error when reading existing assignments : %v", err)
 				}
-				errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateRequest.Vid, assignments, now)
-			}(errors)
+
+				var vgAssign *decision.VisitorCache
+				if existingAssignments != nil {
+					vgAssign = existingAssignments.Assignments[activateItem.Caid]
+				}
+
+				shouldPersistActivation = vgAssign == nil || !vgAssign.Activated || vgAssign.VariationID != activateItem.Vaid
+			}
+
+			if shouldPersistActivation {
+				errorsLength++
+				go func(activateItem *activate_request.ActivateRequest) {
+					if !context.AssignmentsManager.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
+						AssignmentScope: connectors.Activation,
+					}) {
+						return
+					}
+					errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateItem.Vid, map[string]*decision.VisitorCache{
+						activateItem.Caid: {
+							VariationID: activateItem.Vaid,
+							Activated:   true,
+						},
+					}, now)
+				}(activateItem)
+			}
+
+			campaignActivations = append(campaignActivations, &models.CampaignActivation{
+				EnvID:           activateItem.Cid,
+				VisitorID:       visitorID,
+				CustomerID:      activateItem.Vid,
+				CampaignID:      activateItem.Caid,
+				VariationID:     activateItem.Vaid,
+				Timestamp:       now.UnixNano() / 1000000,
+				PersistActivate: shouldPersistActivation,
+			})
 		}
 
-		go func(errors chan error) {
+		errorsLength++
+		go func() {
 			errors <- context.HitsProcessor.TrackHits(
 				connectors.TrackingHits{
-					CampaignActivations: []*models.CampaignActivation{
-						{
-							EnvID:           activateRequest.Cid,
-							VisitorID:       visitorID,
-							CustomerID:      activateRequest.Vid,
-							CampaignID:      activateRequest.Caid,
-							VariationID:     activateRequest.Vaid,
-							Timestamp:       now.UnixNano() / 1000000,
-							PersistActivate: shouldPersistActivation,
-						},
-					},
+					CampaignActivations: campaignActivations,
 				})
-		}(errors)
 
-		for i := 0; i < chanLength; i++ {
+		}()
+
+		for i := 0; i < errorsLength; i++ {
 			err := <-errors
 			if err != nil {
 				utils.WriteServerError(w, err)
