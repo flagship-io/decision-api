@@ -100,17 +100,18 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 			if shouldPersistActivation {
 				errorsLength++
 				go func(activateItem *activate_request.ActivateRequest) {
-					if !context.AssignmentsManager.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
+					var err error = nil
+					if context.AssignmentsManager.ShouldSaveAssignments(connectors.SaveAssignmentsContext{
 						AssignmentScope: connectors.Activation,
 					}) {
-						return
+						err = context.AssignmentsManager.SaveAssignments(context.EnvID, activateItem.Vid, map[string]*decision.VisitorCache{
+							activateItem.Caid: {
+								VariationID: activateItem.Vaid,
+								Activated:   true,
+							},
+						}, now)
 					}
-					errors <- context.AssignmentsManager.SaveAssignments(context.EnvID, activateItem.Vid, map[string]*decision.VisitorCache{
-						activateItem.Caid: {
-							VariationID: activateItem.Vaid,
-							Activated:   true,
-						},
-					}, now)
+					errors <- err
 				}(activateItem)
 			}
 
