@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
@@ -32,9 +33,11 @@ type DataCollectProcessor struct {
 	batchSize      int
 	trackingURL    string
 	hits           []models.MappableHit
-	ticker         *time.Ticker
+	ticker         chan time.Time
+	lastTick       time.Time
 	logger         *logger.Logger
 	httpClient     *http.Client
+	lock           *sync.Mutex
 }
 
 type DatacollectOptionBuilder func(*DataCollectProcessor)
@@ -74,6 +77,7 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 		httpClient: &http.Client{
 			Timeout: 2 * time.Second,
 		},
+		lock: &sync.Mutex{},
 	}
 
 	for _, o := range opts {
@@ -81,28 +85,40 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 	}
 
 	processor.logger.Info("initializing datacollect hits processor")
-	processor.ticker = time.NewTicker(processor.batchingWindow)
+	processor.ticker = make(chan time.Time)
 
 	go func() {
-		for range processor.ticker.C {
-			err := processor.sendBatchHit(context.Background())
-			if err != nil {
-				processor.logger.Errorf("error when sending batch hit: %v", err)
+		for {
+			time.Sleep(processor.batchingWindow)
+			processor.lock.Lock()
+			durationSinceLastTick := time.Since(processor.lastTick)
+			// If last tick was trigger in between because of full batch, wait a little more
+			if durationSinceLastTick < processor.batchingWindow {
+				time.Sleep(processor.batchingWindow - durationSinceLastTick)
 			}
+			processor.lock.Unlock()
+			processor.ticker <- time.Now()
+		}
+	}()
+
+	go func() {
+		for t := range processor.ticker {
+			processor.sendHits(processor.hits, t)
+			processor.hits = []models.MappableHit{}
 		}
 	}()
 
 	return processor
 }
 
-func (d *DataCollectProcessor) sendBatchHit(ctx context.Context) error {
-	if len(d.hits) == 0 {
+func (d *DataCollectProcessor) sendBatchHit(ctx context.Context, mappableHits []models.MappableHit) error {
+	if len(mappableHits) == 0 {
 		d.logger.Info("no hits to send")
 		return nil
 	}
 
 	hits := []map[string]interface{}{}
-	for _, h := range d.hits {
+	for _, h := range mappableHits {
 		h.ComputeQueueTime()
 		hits = append(hits, h.ToMap())
 	}
@@ -123,7 +139,7 @@ func (d *DataCollectProcessor) sendBatchHit(ctx context.Context) error {
 		return fmt.Errorf("error when marshaling batch hit: %v", err)
 	}
 
-	d.logger.Infof("sending hits to datacollect: %v", string(json_data))
+	d.logger.Infof("sending %d hits to datacollect: %v", len(batchHit.Hits), string(json_data))
 	req, err := http.NewRequest(http.MethodPost, d.trackingURL, bytes.NewBuffer(json_data))
 	req = req.WithContext(ctx)
 	if err != nil {
@@ -141,8 +157,17 @@ func (d *DataCollectProcessor) sendBatchHit(ctx context.Context) error {
 	}
 	d.logger.Infof("%d hits sent to datacollect successfully", len(hits))
 
-	d.hits = []models.MappableHit{}
 	return nil
+}
+
+func (d *DataCollectProcessor) sendHits(hits []models.MappableHit, tick time.Time) {
+	err := d.sendBatchHit(context.Background(), hits)
+	if err != nil {
+		d.logger.Errorf("error when sending batch hit: %v", err)
+	}
+	d.lock.Lock()
+	d.lastTick = tick
+	d.lock.Unlock()
 }
 
 func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
@@ -155,15 +180,14 @@ func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
 	}
 	d.hits = append(d.hits, mappableHits...)
 	if len(d.hits) >= d.batchSize {
-		d.ticker.Reset(d.batchingWindow)
-		err := d.sendBatchHit(context.Background())
-		if err != nil {
-			d.logger.Errorf("error when sending batch hit: %v", err)
-		}
+		go d.sendHits(d.hits, time.Now())
+		d.lock.Lock()
+		d.hits = []models.MappableHit{}
+		d.lock.Unlock()
 	}
 	return nil
 }
 
 func (d *DataCollectProcessor) Shutdown(ctx context.Context) error {
-	return d.sendBatchHit(ctx)
+	return d.sendBatchHit(ctx, d.hits)
 }
