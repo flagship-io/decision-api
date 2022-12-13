@@ -15,10 +15,19 @@ import (
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
+// defaultBatchingWindow is the default time duration for batching hits.
 const defaultBatchingWindow = time.Second * 30
+
+// defaultBatchSize is the default number of hits to include in a batch.
 const defaultBatchSize = 50
+
+// defaultTrackingURL is the default URL to send batched hits to.
 const defaultTrackingURL = "https://ariane.abtasty.com"
+
+// defaultLogLevel is the default log level for the DataCollect Processor.
 const defaultLogLevel = "error"
+
+// logName is the name of the logger used by the DataCollect Processor.
 const logName = "DataCollect Processor"
 
 type batchHit struct {
@@ -42,6 +51,7 @@ type DataCollectProcessor struct {
 
 type DatacollectOptionBuilder func(*DataCollectProcessor)
 
+// WithBatchOptions is an option function that sets the batch size and window for the DataCollectProcessor.
 func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		l.batchSize = batchSize
@@ -49,24 +59,28 @@ func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOp
 	}
 }
 
+// WithTrackingURL is an option function that sets the tracking URL for the DataCollectProcessor.
 func WithTrackingURL(url string) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		l.trackingURL = url
 	}
 }
 
+// WithLogger is an option function that sets the logger for the DataCollectProcessor.
 func WithLogger(lvl string, fmt logger.LogFormat) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		l.logger = logger.New(lvl, fmt, logName)
 	}
 }
 
+// WithHTTPClient is an option function that sets the HTTP client for the DataCollectProcessor.
 func WithHTTPClient(client *http.Client) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		l.httpClient = client
 	}
 }
 
+// NewDataCollectProcessor creates a new DataCollectProcessor with the given options.
 func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProcessor {
 	processor := &DataCollectProcessor{
 		batchingWindow: defaultBatchingWindow,
@@ -111,6 +125,7 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 	return processor
 }
 
+// sendBatchHit sends a batch of hits to the trackingURL using the httpClient.
 func (d *DataCollectProcessor) sendBatchHit(ctx context.Context, mappableHits []models.MappableHit) error {
 	if len(mappableHits) == 0 {
 		d.logger.Info("no hits to send")
@@ -170,6 +185,8 @@ func (d *DataCollectProcessor) sendHits(hits []models.MappableHit, tick time.Tim
 	d.lock.Unlock()
 }
 
+// TrackHits adds the given hits to the processor for tracking.
+// If the number of hits in the processor exceeds the batch size, a batch of hits is sent.
 func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
 	mappableHits := []models.MappableHit{}
 	for _, ca := range hits.CampaignActivations {
