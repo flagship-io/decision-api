@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/go-redis/redis/v8"
 )

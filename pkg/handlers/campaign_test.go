@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/utils"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/internal/test"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -29,7 +29,7 @@ func TestCampaign(t *testing.T) {
 		Method: "POST",
 	}
 
-	Campaign(utils.CreateMockDecisionContext())(w, req)
+	Campaign(test.CreateMockDecisionContext())(w, req)
 
 	resp := w.Result()
 
@@ -55,7 +55,7 @@ func TestCampaign(t *testing.T) {
 	req.Body = io.NopCloser(strings.NewReader(body))
 	w = httptest.NewRecorder()
 
-	Campaign(utils.CreateMockDecisionContext())(w, req)
+	Campaign(test.CreateMockDecisionContext())(w, req)
 
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -67,7 +67,7 @@ func TestCampaign(t *testing.T) {
 	req.Body = io.NopCloser(strings.NewReader(body))
 	w = httptest.NewRecorder()
 
-	Campaign(utils.CreateMockDecisionContext())(w, req)
+	Campaign(test.CreateMockDecisionContext())(w, req)
 
 	resp = w.Result()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)

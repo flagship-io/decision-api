@@ -22,28 +22,28 @@ func TestNewFromFilename(t *testing.T) {
 	assert.Equal(t, cfg.GetString("cache.options.redisHost"), RedisAddr)
 }
 
-func TestGetStringDefault(t *testing.T) {
+func TestGetDefaultString(t *testing.T) {
 	cfg, _ := NewFromFilename("")
-	addr := cfg.GetStringDefault("address", "default")
+	addr := cfg.GetDefaultString("address", "default")
 	assert.Equal(t, ServerAddress, addr)
-	addr = cfg.GetStringDefault("not_exists", "default")
+	addr = cfg.GetDefaultString("not_exists", "default")
 	assert.Equal(t, "default", addr)
 }
 
-func TestGetIntDefault(t *testing.T) {
+func TestGetDefaultInt(t *testing.T) {
 	cfg, _ := NewFromFilename("")
 	cfg.Set("test", 1)
-	val := cfg.GetIntDefault("test", 2)
+	val := cfg.GetDefaultInt("test", 2)
 	assert.Equal(t, 1, val)
-	val = cfg.GetIntDefault("not_exists", 2)
+	val = cfg.GetDefaultInt("not_exists", 2)
 	assert.Equal(t, 2, val)
 }
 
-func TestGetDurationDefault(t *testing.T) {
+func TestGetDefaultDuration(t *testing.T) {
 	cfg, _ := NewFromFilename("")
 	cfg.Set("test", 1*time.Second)
-	val := cfg.GetDurationDefault("test", 2*time.Minute)
+	val := cfg.GetDefaultDuration("test", 2*time.Minute)
 	assert.Equal(t, 1*time.Second, val)
-	val = cfg.GetDurationDefault("not_exists", 2*time.Minute)
+	val = cfg.GetDefaultDuration("not_exists", 2*time.Minute)
 	assert.Equal(t, 2*time.Minute, val)
 }

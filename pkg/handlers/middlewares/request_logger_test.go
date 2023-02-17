@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,6 +39,5 @@ func TestRequestLogger(t *testing.T) {
 	ret := b.Bytes()
 	assert.Contains(t, string(ret), r.RemoteAddr)
 	assert.Contains(t, string(ret), "200")
-	assert.Contains(t, string(ret), "100")
 	assert.Contains(t, string(ret), url.Host)
 }

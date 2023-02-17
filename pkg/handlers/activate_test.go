@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/test"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
@@ -28,7 +28,7 @@ func TestActivate(t *testing.T) {
 		Body:   io.NopCloser(strings.NewReader(body)),
 		Method: "POST",
 	}
-	context := utils.CreateMockDecisionContext()
+	context := test.CreateMockDecisionContext()
 	Activate(context)(w, req)
 
 	resp := w.Result()
@@ -45,7 +45,7 @@ func TestActivate(t *testing.T) {
 		Body:   io.NopCloser(strings.NewReader(body)),
 		Method: "POST",
 	}
-	context = utils.CreateMockDecisionContext()
+	context = test.CreateMockDecisionContext()
 	Activate(context)(w, req)
 
 	resp = w.Result()

@@ -9,26 +9,26 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/flagship-io/decision-api/pkg/config"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/server"
-	"github.com/flagship-io/decision-api/pkg/utils/config"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
 
 var shutdownTimeout = 3 * time.Second
 
 func createLogger(cfg *config.Config) *logger.Logger {
-	lvl := cfg.GetStringDefault("log.level", config.LoggerLevel)
-	format := cfg.GetStringDefault("log.format", config.LoggerFormat)
+	lvl := cfg.GetDefaultString("log.level", config.LoggerLevel)
+	format := cfg.GetDefaultString("log.format", config.LoggerFormat)
 
 	return logger.New(lvl, logger.LogFormat(format), "Server")
 }
 
 func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error) {
-	logLvl := cfg.GetStringDefault("log.level", config.LoggerLevel)
-	logFmt := cfg.GetStringDefault("log.format", config.LoggerFormat)
+	logLvl := cfg.GetDefaultString("log.level", config.LoggerLevel)
+	logFmt := cfg.GetDefaultString("log.format", config.LoggerFormat)
 
 	log.Info("initializing assignment cache manager from configuration")
 	assignmentManager, err := getAssignmentsManager(cfg)
@@ -50,8 +50,8 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 		server.WithAssignmentsManager(assignmentManager),
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors.enabled"),
-			AllowedOrigins: cfg.GetStringDefault("cors.allowed_origins", config.ServerCorsAllowedOrigins),
-			AllowedHeaders: cfg.GetStringDefault("cors.allowed_headers", config.ServerCorsAllowedHeaders),
+			AllowedOrigins: cfg.GetDefaultString("cors.allowed_origins", config.ServerCorsAllowedOrigins),
+			AllowedHeaders: cfg.GetDefaultString("cors.allowed_headers", config.ServerCorsAllowedHeaders),
 		}),
 	)
 }
@@ -74,7 +74,7 @@ func main() {
 
 	// Run server
 	go func() {
-		logger.Infof("Flagship Decision API server [%s] listening on %s", models.Version, cfg.GetStringDefault("address", ":8080"))
+		logger.Infof("Flagship Decision API server [%s] listening on %s", models.Version, cfg.GetDefaultString("address", ":8080"))
 		if err := srv.Listen(); err != http.ErrServerClosed {
 			logger.Fatalf("error when starting server: %v", err)
 		}

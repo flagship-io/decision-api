@@ -1,4 +1,4 @@
-package utils
+package parser
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 )
 
 // GetDecisionRequest transforms http request into a DecisionRequest
-func GetDecisionRequest(r *http.Request) (*decision_request.DecisionRequest, error) {
+func ParseRequest(r *http.Request) (*decision_request.DecisionRequest, error) {
 	decisionRequest, err := unmarshalHit(r)
 
 	if err != nil {

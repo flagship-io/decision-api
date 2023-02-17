@@ -7,7 +7,8 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
+	"github.com/flagship-io/decision-api/internal/timetracker"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/flagship-proto/decision_response"
@@ -31,7 +32,7 @@ import (
 // @Router /campaigns [post]
 func Campaigns(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		apilogic.HandleCampaigns(w, req, context, requestCampaignsHandler, utils.NewTracker())
+		apilogic.HandleCampaigns(w, req, context, requestCampaignsHandler, timetracker.NewTracker())
 	}
 }
 
@@ -44,7 +45,7 @@ func toAccountSettings(e *models.Environment) *decision_response.AccountSettings
 
 func requestCampaignsHandler(w http.ResponseWriter, handleRequest *handle.Request, err error) {
 	if err != nil {
-		utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+		reswriter.WriteClientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -68,10 +69,10 @@ func requestCampaignsHandler(w http.ResponseWriter, handleRequest *handle.Reques
 	ma.EmitUnpopulated = true
 	data, err := ma.Marshal(finalMessage)
 	if err != nil {
-		utils.WriteServerError(w, fmt.Errorf("error when returning final response %v", err))
+		reswriter.WriteServerError(w, fmt.Errorf("error when returning final response %v", err))
 	}
 
-	utils.WriteJSONStringOk(w, getSanitizedResponse(string(data)))
+	reswriter.WriteJSONStringOk(w, getSanitizedResponse(string(data)))
 }
 
 func aggregateFullResponse(response *decision_response.DecisionResponseFull) {

@@ -1,4 +1,4 @@
-package utils
+package parser
 
 import (
 	"errors"
@@ -10,25 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetDecisionRequest(t *testing.T) {
-	_, err := GetDecisionRequest(&http.Request{
+func TestParseRequest(t *testing.T) {
+	_, err := ParseRequest(&http.Request{
 		Method: "GET",
 	})
 	assert.Equal(t, errors.New("only POST http method is allowed"), err)
 
-	_, err = GetDecisionRequest(&http.Request{
+	_, err = ParseRequest(&http.Request{
 		Method: "POST",
 		Body:   io.NopCloser(strings.NewReader("")),
 	})
 	assert.Contains(t, err.Error(), "Must be a valid json")
 
-	_, err = GetDecisionRequest(&http.Request{
+	_, err = ParseRequest(&http.Request{
 		Method: "POST",
 		Body:   io.NopCloser(strings.NewReader("{\"wrong_key\":true}")),
 	})
 	assert.Contains(t, err.Error(), "json body is not valid")
 
-	r, err := GetDecisionRequest(&http.Request{
+	r, err := ParseRequest(&http.Request{
 		Method: "POST",
 		Body:   io.NopCloser(strings.NewReader("{}")),
 	})

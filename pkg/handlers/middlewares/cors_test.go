@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/flagship-io/decision-api/pkg/config"
 	"github.com/flagship-io/decision-api/pkg/models"
-	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/stretchr/testify/assert"
 )
 
