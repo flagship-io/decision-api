@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flagship-io/decision-api/pkg/utils/config"
+	"github.com/flagship-io/decision-api/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -38,6 +38,7 @@ func TestCreateServer(t *testing.T) {
 func TestMain(t *testing.T) {
 	os.Setenv("API_KEY", "api_key")
 	os.Setenv("ENV_ID", "env_id")
+	os.Setenv("ADDRESS", "localhost:8080")
 	go func() {
 		time.Sleep(2 * time.Second)
 		err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)

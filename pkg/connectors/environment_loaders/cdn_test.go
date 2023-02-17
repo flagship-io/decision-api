@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/flagship-proto/bucketing"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"github.com/flagship-io/flagship-proto/targeting"

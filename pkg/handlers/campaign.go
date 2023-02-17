@@ -6,9 +6,10 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
+	"github.com/flagship-io/decision-api/internal/timetracker"
 	"github.com/flagship-io/decision-api/pkg/connectors"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/flagship-proto/decision_response"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -29,18 +30,18 @@ import (
 // @Router /campaigns/{id} [post]
 func Campaign(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		apilogic.HandleCampaigns(w, req, context, requestCampaignHandler, utils.NewTracker())
+		apilogic.HandleCampaigns(w, req, context, requestCampaignHandler, timetracker.NewTracker())
 	}
 }
 
 func requestCampaignHandler(w http.ResponseWriter, handleRequest *handle.Request, err error) {
 	if err != nil {
-		utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+		reswriter.WriteClientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if len(handleRequest.DecisionResponse.Campaigns) == 0 {
-		utils.WriteNoContent(w)
+		reswriter.WriteNoContent(w)
 		return
 	}
 
@@ -63,10 +64,10 @@ func sendSingleResponse(w http.ResponseWriter, campaignDecisionResponse *decisio
 	ma.EmitUnpopulated = true
 	data, err := ma.Marshal(campaignDecisionResponse)
 	if err != nil {
-		utils.WriteServerError(w, err)
+		reswriter.WriteServerError(w, err)
 		return
 	}
-	utils.WriteJSONStringOk(w, string(data))
+	reswriter.WriteJSONStringOk(w, string(data))
 }
 
 func sendSingleFormatResponse(w http.ResponseWriter, campaignDecisionResponse *decision_response.Campaign, logger *logger.Logger) {

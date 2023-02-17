@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
 )
 
 func Recover(enabled bool, handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
@@ -12,7 +12,7 @@ func Recover(enabled bool, handler func(http.ResponseWriter, *http.Request)) fun
 		if enabled {
 			defer func() {
 				if err := recover(); err != nil {
-					utils.WriteServerError(w, fmt.Errorf("unexpected error occurred: %v", err))
+					reswriter.WriteServerError(w, fmt.Errorf("unexpected error occurred: %v", err))
 				}
 			}()
 		}

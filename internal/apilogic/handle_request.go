@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/parser"
 	"github.com/flagship-io/flagship-common/targeting"
 )
 
 // BuildHandleRequest builds a handle.Request object from the API Gateway request
 func BuildHandleRequest(req *http.Request) (*handle.Request, error) {
 	handleRequest := handle.NewRequestFromHTTP(req)
-	decisionRequest, err := utils.GetDecisionRequest(req)
+	decisionRequest, err := parser.ParseRequest(req)
 
 	if err != nil {
 		return nil, err

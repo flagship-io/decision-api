@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/decision-api/pkg/models"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/flagship-io/flagship-common/targeting"
 

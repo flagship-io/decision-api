@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
 	"github.com/flagship-io/decision-api/internal/validation"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
@@ -34,7 +34,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 
 		data, err := io.ReadAll(req.Body)
 		if err != nil {
-			utils.WriteServerError(w, err)
+			reswriter.WriteServerError(w, err)
 			return
 		}
 
@@ -43,7 +43,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		if err := protojson.Unmarshal(data, activateRequest); err != nil {
 			activateRequestBatch := &activate_request.ActivateRequestBatch{}
 			if err := protojson.Unmarshal(data, activateRequestBatch); err != nil {
-				utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+				reswriter.WriteClientError(w, http.StatusBadRequest, err.Error())
 				return
 			}
 
@@ -63,7 +63,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		for _, activateItem := range activateItems {
 			if bodyErr := validation.CheckErrorBody(context.EnvID, activateItem); bodyErr != nil {
 				data, _ := json.Marshal(bodyErr)
-				utils.WriteClientError(w, http.StatusBadRequest, string(data))
+				reswriter.WriteClientError(w, http.StatusBadRequest, string(data))
 				return
 			}
 
@@ -138,12 +138,12 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 		for i := 0; i < errorsLength; i++ {
 			err := <-errors
 			if err != nil {
-				utils.WriteServerError(w, err)
+				reswriter.WriteServerError(w, err)
 				return
 			}
 		}
 
 		// Return a response with a 200 OK status and the campaign payload as an example
-		utils.WriteNoContent(w)
+		reswriter.WriteNoContent(w)
 	}
 }

@@ -1,4 +1,4 @@
-package utils
+package udc
 
 import (
 	"encoding/json"
@@ -43,6 +43,6 @@ func FetchVisitorData(environmentID string, visitorID string) ([]UDCVisitorRow, 
 	return data, nil
 }
 
-func SetUDCUrl(url string) {
+func SetURL(url string) {
 	udcUrl = url
 }

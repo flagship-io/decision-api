@@ -7,7 +7,8 @@ import (
 	"sync"
 
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
+	"github.com/flagship-io/decision-api/internal/udc"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/models"
 	common "github.com/flagship-io/flagship-common"
@@ -19,7 +20,7 @@ import (
 func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *connectors.DecisionContext, handleDecision func(http.ResponseWriter, *handle.Request, error), tracker *common.Tracker) {
 	handleRequest, err := BuildHandleRequest(req)
 	if err != nil {
-		utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+		reswriter.WriteClientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -34,10 +35,10 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 
 	if err != nil {
 		if errors.Is(err, models.ErrEnvironmentNotFound) {
-			utils.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("environment %s not found", handleRequest.DecisionContext.EnvID))
+			reswriter.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("environment %s not found", handleRequest.DecisionContext.EnvID))
 			return
 		}
-		utils.WriteServerError(w, err)
+		reswriter.WriteServerError(w, err)
 		return
 	}
 
@@ -53,7 +54,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 		}
 
 		if len(filteredCampaigns) == 0 {
-			utils.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("The campaign %s is paused or doesn’t exist. Verify your customId or campaignId.", handleRequest.CampaignID))
+			reswriter.WriteClientError(w, http.StatusBadRequest, fmt.Sprintf("The campaign %s is paused or doesn’t exist. Verify your customId or campaignId.", handleRequest.CampaignID))
 			return
 		}
 		handleRequest.Environment.Common.Campaigns = filteredCampaigns
@@ -61,7 +62,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 
 	// 3. Return panic response is panic mode activated
 	if handleRequest.Environment.Common.IsPanic {
-		utils.WritePanicResponse(w, handleRequest.DecisionRequest.VisitorId)
+		reswriter.WritePanicResponse(w, handleRequest.DecisionRequest.VisitorId)
 		return
 	}
 
@@ -110,7 +111,7 @@ func HandleCampaigns(w http.ResponseWriter, req *http.Request, decisionContext *
 }
 
 func fillVisitorContext(request *handle.Request) error {
-	data, err := utils.FetchVisitorData(request.DecisionContext.EnvID, request.DecisionRequest.VisitorId.Value)
+	data, err := udc.FetchVisitorData(request.DecisionContext.EnvID, request.DecisionRequest.VisitorId.Value)
 	if err != nil {
 		return err
 	}

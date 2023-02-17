@@ -10,7 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
+	"github.com/flagship-io/decision-api/internal/test"
+	"github.com/flagship-io/decision-api/internal/udc"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/models"
@@ -31,7 +33,7 @@ func TestCampaigns(t *testing.T) {
 		Method: "POST",
 	}
 
-	decisionContext := utils.CreateMockDecisionContext()
+	decisionContext := test.CreateMockDecisionContext()
 	Campaigns(decisionContext)(w, req)
 
 	resp := w.Result()
@@ -116,7 +118,7 @@ func TestCampaigns(t *testing.T) {
 	assert.Equal(t, 2, len(decisionResponseSimple.CampaignsVariation))
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rows := []utils.UDCVisitorRow{
+		rows := []udc.UDCVisitorRow{
 			{
 				Segment: "age",
 				Partner: "mixpanel",
@@ -130,7 +132,7 @@ func TestCampaigns(t *testing.T) {
 	// Close the server when test finishes
 	defer server.Close()
 
-	utils.SetUDCUrl(server.URL)
+	udc.SetURL(server.URL)
 	// normal mode, send context events true, extras
 	url, _ = url.Parse("/campaigns?mode=normal")
 	w = httptest.NewRecorder()
@@ -166,7 +168,7 @@ func TestCampaigns(t *testing.T) {
 	resp = w.Result()
 	data, err = io.ReadAll(resp.Body)
 	assert.Nil(t, err)
-	respErr := &utils.ClientErrorMessage{}
+	respErr := &reswriter.ClientErrorMessage{}
 	json.Unmarshal(data, &respErr)
 	assert.Contains(t, respErr.Message, "not found")
 }

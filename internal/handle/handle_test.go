@@ -3,7 +3,7 @@ package handle
 import (
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/test"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/models"
@@ -82,11 +82,11 @@ func TestDecision(t *testing.T) {
 	clientID := "client_id"
 
 	campaigns := []*common.Campaign{
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign1",
 			"vg1",
-			utils.CreateAllUsersTargetingMock(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateAllUsersTargetingMock(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
 	}
 	clientInfos := common.Environment{
@@ -129,17 +129,17 @@ func TestDecision1Vis1Test(t *testing.T) {
 	clientID := "client_id"
 
 	campaigns := []*common.Campaign{
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign1",
 			"vg1",
-			utils.CreateAllUsersTargetingMock(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateAllUsersTargetingMock(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign1bis",
 			"vg1bis",
-			utils.CreateAllUsersTargetingMock(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateAllUsersTargetingMock(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
 	}
 	clientInfos := common.Environment{
@@ -191,11 +191,11 @@ func TestDecisionNoReconciliation(t *testing.T) {
 	}
 
 	campaigns := []*common.Campaign{
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign2",
 			"vg2",
-			utils.CreateAllUsersTargetingMock(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateAllUsersTargetingMock(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
 	}
 
@@ -237,7 +237,7 @@ func TestDecisionReconciliation(t *testing.T) {
 	anonymousID := "1234"
 	clientID := "client_id"
 	handleRequest := Request{
-		DecisionContext: utils.CreateMockDecisionContext(),
+		DecisionContext: test.CreateMockDecisionContext(),
 		DecisionRequest: &decision_request.DecisionRequest{
 			VisitorId:  &wrapperspb.StringValue{Value: anonymousID},
 			TriggerHit: &wrapperspb.BoolValue{Value: false},
@@ -250,11 +250,11 @@ func TestDecisionReconciliation(t *testing.T) {
 	}
 
 	campaigns := []*common.Campaign{
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign3",
 			"vg3",
-			utils.CreateAllUsersTargetingMock(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateAllUsersTargetingMock(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
 	}
 
@@ -307,11 +307,11 @@ func TestDecisionReconciliation(t *testing.T) {
 		"age": structpb.NewStringValue("21"),
 	}
 	campaigns = []*common.Campaign{
-		utils.CreateABCampaignMock(
+		test.CreateABCampaignMock(
 			"campaign4",
 			"vg3",
-			utils.CreateTargetingWithProvider(),
-			utils.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
+			test.CreateTargetingWithProvider(),
+			test.CreateModification("key", "value", decision_response.ModificationsType_FLAG),
 		),
 	}
 	clientInfos.Campaigns = campaigns

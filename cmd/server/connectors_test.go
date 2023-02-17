@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/flagship-io/decision-api/pkg/config"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
-	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/stretchr/testify/assert"
 )
 

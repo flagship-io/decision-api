@@ -36,7 +36,7 @@ func NewFromFilename(name string) (*Config, error) {
 	return &Config{v}, nil
 }
 
-func (c *Config) GetStringDefault(key, def string) string {
+func (c *Config) GetDefaultString(key, def string) string {
 	if !c.Viper.IsSet(key) {
 		return def
 	}
@@ -44,7 +44,7 @@ func (c *Config) GetStringDefault(key, def string) string {
 	return c.Viper.GetString(key)
 }
 
-func (c *Config) GetIntDefault(key string, def int) int {
+func (c *Config) GetDefaultInt(key string, def int) int {
 	if !c.Viper.IsSet(key) {
 		return def
 	}
@@ -52,7 +52,7 @@ func (c *Config) GetIntDefault(key string, def int) int {
 	return c.Viper.GetInt(key)
 }
 
-func (c *Config) GetDurationDefault(key string, def time.Duration) time.Duration {
+func (c *Config) GetDefaultDuration(key string, def time.Duration) time.Duration {
 	if !c.Viper.IsSet(key) {
 		return def
 	}

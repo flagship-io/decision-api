@@ -5,7 +5,8 @@ import (
 
 	"github.com/flagship-io/decision-api/internal/apilogic"
 	"github.com/flagship-io/decision-api/internal/handle"
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/reswriter"
+	"github.com/flagship-io/decision-api/internal/timetracker"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/flagship-proto/decision_response"
 )
@@ -40,13 +41,13 @@ type FlagInfo struct {
 // @Router /flags [post]
 func Flags(context *connectors.DecisionContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		apilogic.HandleCampaigns(w, req, context, requestFlagsHandler, utils.NewTracker())
+		apilogic.HandleCampaigns(w, req, context, requestFlagsHandler, timetracker.NewTracker())
 	}
 }
 
 func requestFlagsHandler(w http.ResponseWriter, handleRequest *handle.Request, err error) {
 	if err != nil {
-		utils.WriteClientError(w, http.StatusBadRequest, err.Error())
+		reswriter.WriteClientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -77,5 +78,5 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 		}
 	}
 
-	utils.WriteJSONOk(w, flagInfos)
+	reswriter.WriteJSONOk(w, flagInfos)
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flagship-io/decision-api/internal/utils"
+	"github.com/flagship-io/decision-api/internal/test"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	common "github.com/flagship-io/flagship-common"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestFlags(t *testing.T) {
 		Method: "POST",
 	}
 
-	Flags(utils.CreateMockDecisionContext())(w, req)
+	Flags(test.CreateMockDecisionContext())(w, req)
 
 	resp := w.Result()
 
@@ -44,7 +44,7 @@ func TestFlags(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	req.Body = io.NopCloser(strings.NewReader(body))
-	context := utils.CreateMockDecisionContext()
+	context := test.CreateMockDecisionContext()
 	context.EnvironmentLoader.(*environment_loaders.MockLoader).MockedEnvironment.Common.Campaigns = []*common.Campaign{}
 	Flags(context)(w, req)
 

@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/flagship-io/decision-api/docs"
+	"github.com/flagship-io/decision-api/pkg/config"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
 	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/handlers"
 	"github.com/flagship-io/decision-api/pkg/handlers/middlewares"
+	"github.com/flagship-io/decision-api/pkg/logger"
 	"github.com/flagship-io/decision-api/pkg/models"
-	"github.com/flagship-io/decision-api/pkg/utils/config"
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
 	common "github.com/flagship-io/flagship-common"
 	httpSwagger "github.com/swaggo/http-swagger"
 )

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flagship-io/decision-api/pkg/utils/logger"
+	"github.com/flagship-io/decision-api/pkg/logger"
 )
 
 func RequestLogger(logger *logger.Logger, handler http.Handler) http.Handler {
