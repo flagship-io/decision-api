@@ -30,7 +30,7 @@ type CampaignActivation struct {
 }
 
 func (c *CampaignActivation) ComputeQueueTime() {
-	c.QueueTime = time.Now().UnixMilli() - c.Timestamp
+	c.QueueTime += time.Now().UnixMilli() - c.Timestamp
 }
 
 func (c *CampaignActivation) ToMap() map[string]interface{} {
