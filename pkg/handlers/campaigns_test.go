@@ -167,6 +167,7 @@ func TestCampaigns(t *testing.T) {
 	data, err = io.ReadAll(resp.Body)
 	assert.Nil(t, err)
 	respErr := &utils.ClientErrorMessage{}
-	json.Unmarshal(data, &respErr)
+	err = json.Unmarshal(data, &respErr)
+	assert.Nil(t, err)
 	assert.Contains(t, respErr.Message, "not found")
 }

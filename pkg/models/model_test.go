@@ -13,6 +13,13 @@ func TestCampaignActivationComputeQueueTime(t *testing.T) {
 	}
 	c.ComputeQueueTime()
 	assert.Equal(t, int64(100), c.QueueTime)
+
+	c = CampaignActivation{
+		Timestamp: time.Now().UnixMilli() - 100,
+		QueueTime: 50,
+	}
+	c.ComputeQueueTime()
+	assert.Equal(t, int64(150), c.QueueTime)
 }
 
 func TestCampaignActivationToMap(t *testing.T) {
