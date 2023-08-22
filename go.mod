@@ -5,8 +5,8 @@ go 1.17
 require (
 	git.mills.io/prologic/bitcask v1.0.2
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/flagship-io/flagship-common v0.0.18-beta.1
-	github.com/flagship-io/flagship-proto v0.0.19
+	github.com/flagship-io/flagship-common v0.0.19-0.20230822125128-9d064199447d
+	github.com/flagship-io/flagship-proto v0.0.21-0.20230822125635-2c7ea9d4dde6
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/sirupsen/logrus v1.8.1

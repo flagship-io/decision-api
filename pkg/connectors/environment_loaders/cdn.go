@@ -155,6 +155,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 func variationToCommonStruct(v *decision_response.FullVariation) *common.Variation {
 	return &common.Variation{
 		ID:            v.Id.Value,
+		Name:          v.Name.Value,
 		Reference:     v.Reference,
 		Allocation:    float32(v.Allocation),
 		Modifications: v.Modifications,
@@ -171,7 +172,8 @@ func variationGroupToCommonStruct(vg *bucketing.Bucketing_BucketingVariationGrou
 		bucketRange = append(bucketRange, r.R)
 	}
 	return &common.VariationGroup{
-		ID: vg.Id,
+		ID:   vg.Id,
+		Name: vg.Name,
 		Campaign: &common.Campaign{
 			ID:           campaign.Id,
 			Type:         campaign.Type,
@@ -197,6 +199,7 @@ func campaignToCommonStruct(c *bucketing.Bucketing_BucketingCampaign) *common.Ca
 	}
 	return &common.Campaign{
 		ID:              c.Id,
+		Name:            c.Name,
 		Slug:            slug,
 		Type:            c.Type,
 		VariationGroups: variationGroups,
