@@ -12,12 +12,15 @@ import (
 
 // FlagMetadata represents the metadata informations about a flag key
 type FlagMetadata struct {
-	CampaignID       string  `json:"campaignId"`
-	Slug             *string `json:"slug"`
-	Type             string  `json:"type"`
-	VariationGroupID string  `json:"variationGroupId"`
-	VariationID      string  `json:"variationId"`
-	Reference        bool    `json:"reference"`
+	CampaignID         string  `json:"campaignId"`
+	CampaignName       string  `json:"campaignName"`
+	Slug               *string `json:"slug"`
+	Type               string  `json:"type"`
+	VariationGroupID   string  `json:"variationGroupId"`
+	VariationGroupName string  `json:"variationGroupName"`
+	VariationID        string  `json:"variationId"`
+	VariationName      string  `json:"variationName"`
+	Reference          bool    `json:"reference"`
 }
 
 // FlagInfo represents the informations about a flag key
@@ -60,11 +63,14 @@ func sendFlagsResponse(w http.ResponseWriter, decisionResponse *decision_respons
 		if c.GetVariation() != nil && c.GetVariation().GetModifications() != nil && c.GetVariation().GetModifications().GetValue() != nil && c.GetVariation().GetModifications().GetValue().GetFields() != nil {
 			for k, v := range c.GetVariation().GetModifications().GetValue().GetFields() {
 				mdata := FlagMetadata{
-					CampaignID:       c.GetId().Value,
-					Type:             c.GetType().Value,
-					VariationGroupID: c.GetVariationGroupId().Value,
-					VariationID:      c.GetVariation().GetId().Value,
-					Reference:        c.GetVariation().GetReference(),
+					CampaignID:         c.GetId().Value,
+					CampaignName:       c.GetName().GetValue(),
+					Type:               c.GetType().Value,
+					VariationGroupID:   c.GetVariationGroupId().Value,
+					VariationGroupName: c.GetVariationGroupName().GetValue(),
+					VariationID:        c.GetVariation().GetId().Value,
+					VariationName:      c.GetVariation().GetName().GetValue(),
+					Reference:          c.GetVariation().GetReference(),
 				}
 				if c.GetSlug() != nil {
 					mdata.Slug = &c.GetSlug().Value
