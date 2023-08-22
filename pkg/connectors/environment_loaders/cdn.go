@@ -155,7 +155,7 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 func variationToCommonStruct(v *decision_response.FullVariation) *common.Variation {
 	return &common.Variation{
 		ID:            v.Id.Value,
-		Name:          v.Name.Value,
+		Name:          v.Name.GetValue(),
 		Reference:     v.Reference,
 		Allocation:    float32(v.Allocation),
 		Modifications: v.Modifications,
