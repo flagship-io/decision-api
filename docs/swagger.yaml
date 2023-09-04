@@ -10,6 +10,8 @@ definitions:
     properties:
       campaignId:
         type: string
+      campaignName:
+        type: string
       reference:
         type: boolean
       slug:
@@ -18,7 +20,11 @@ definitions:
         type: string
       variationGroupId:
         type: string
+      variationGroupName:
+        type: string
       variationId:
+        type: string
+      variationName:
         type: string
     type: object
   handlers.MetricsResponse:

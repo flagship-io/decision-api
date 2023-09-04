@@ -160,10 +160,10 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fatih/color v1.12.0/go.mod h1:ELkj/draVOlAH/xkhN6mQ50Qd0MPOk5AAr3maGEBuJM=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
-github.com/flagship-io/flagship-common v0.0.18 h1:tinXFcopXGBjWXL1Tzijnp72dMYDcD6wM0E+Um4DgWQ=
-github.com/flagship-io/flagship-common v0.0.18/go.mod h1:d1I4Na8q1DsRZD9Errs6i4YO6RiXbXY5E23OLcwNmZI=
-github.com/flagship-io/flagship-proto v0.0.20 h1:uR+wLlp8vc7qQbxAPbsPZ6lfznkCqHW6NycMbcdMHyM=
-github.com/flagship-io/flagship-proto v0.0.20/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
+github.com/flagship-io/flagship-common v0.0.19 h1:XHgek8I4w4WTu9z8sbfcJEfduvNgvga0hNPua5ivDEo=
+github.com/flagship-io/flagship-common v0.0.19/go.mod h1:fBqE2c4onD+V+0rs5IKugmQwowmmO2Af42DVoYVt36Y=
+github.com/flagship-io/flagship-proto v0.0.21 h1:zVFFRCHTOonXD1/xVrHvUShVF0UNuH5BXsWjaySJ5IA=
+github.com/flagship-io/flagship-proto v0.0.21/go.mod h1:Nv5epf8wbbAEx6sAnjPumFy+YQOClXyXlxZzUMUqidw=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/franela/goblin v0.0.0-20210519012713-85d372ac71e2/go.mod h1:VzmDKDJVZI3aJmnRI9VjAn9nJ8qPPsN1fqzr9dqInIo=
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=

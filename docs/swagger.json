@@ -249,6 +249,9 @@
                 "campaignId": {
                     "type": "string"
                 },
+                "campaignName": {
+                    "type": "string"
+                },
                 "reference": {
                     "type": "boolean"
                 },
@@ -261,7 +264,13 @@
                 "variationGroupId": {
                     "type": "string"
                 },
+                "variationGroupName": {
+                    "type": "string"
+                },
                 "variationId": {
+                    "type": "string"
+                },
+                "variationName": {
                     "type": "string"
                 }
             }
