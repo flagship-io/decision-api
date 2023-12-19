@@ -39,6 +39,7 @@ func TestCampaignActivationToMap(t *testing.T) {
 		"caid": "caid",
 		"vaid": "vaid",
 		"qt":   int64(100),
+		"qa":   false,
 		"t":    "CAMPAIGN",
 	}, obj)
 }

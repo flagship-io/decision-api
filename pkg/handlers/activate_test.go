@@ -106,6 +106,42 @@ func TestActivate(t *testing.T) {
 	assert.Equal(t, "anonymous_id", hitProcessor.TrackedHits.CampaignActivations[0].VisitorID)
 	assert.True(t, hitProcessor.TrackedHits.CampaignActivations[0].PersistActivate)
 
+	// activate simple with qa
+	body = `{
+		"cid": "env_id",
+		"aid": "anonymous_id",
+		"vid": "visitor_id",
+		"caid": "campaign_id",
+		"vaid": "variation_id",
+		"qa": true
+    }`
+	w = httptest.NewRecorder()
+
+	req = &http.Request{
+		URL:    url,
+		Body:   io.NopCloser(strings.NewReader(body)),
+		Method: "POST",
+	}
+
+	assignmentManager = assignments_managers.InitMemoryManager()
+	hitProcessor = &hits_processors.MockHitProcessor{}
+	context.EnvID = "env_id"
+	context.AssignmentsManager = assignmentManager
+	context.HitsProcessor = hitProcessor
+	Activate(context)(w, req)
+
+	resp = w.Result()
+	assert.Equal(t, 204, resp.StatusCode)
+
+	assert.Len(t, hitProcessor.TrackedHits.CampaignActivations, 1)
+	assert.Equal(t, "variation_id", hitProcessor.TrackedHits.CampaignActivations[0].VariationID)
+	assert.Equal(t, "campaign_id", hitProcessor.TrackedHits.CampaignActivations[0].CampaignID)
+	assert.Equal(t, "env_id", hitProcessor.TrackedHits.CampaignActivations[0].EnvID)
+	assert.Equal(t, "visitor_id", hitProcessor.TrackedHits.CampaignActivations[0].CustomerID)
+	assert.Equal(t, "anonymous_id", hitProcessor.TrackedHits.CampaignActivations[0].VisitorID)
+	assert.True(t, hitProcessor.TrackedHits.CampaignActivations[0].PersistActivate)
+	assert.True(t, hitProcessor.TrackedHits.CampaignActivations[0].QA)
+
 	// activate batch
 	body = `{
 		"cid": "env_id",

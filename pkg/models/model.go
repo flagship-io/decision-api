@@ -26,6 +26,7 @@ type CampaignActivation struct {
 	VariationID     string `json:"vaid"`
 	Timestamp       int64
 	PersistActivate bool
+	QA              bool  `json:"qa"`
 	QueueTime       int64 `json:"qt"`
 }
 
@@ -40,6 +41,7 @@ func (c *CampaignActivation) ToMap() map[string]interface{} {
 		"caid": c.CampaignID,
 		"vaid": c.VariationID,
 		"qt":   c.QueueTime,
+		"qa":   c.QA,
 		"t":    "CAMPAIGN",
 	}
 
