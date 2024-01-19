@@ -123,6 +123,7 @@ func Activate(context *connectors.DecisionContext) func(http.ResponseWriter, *ht
 				VariationID:     activateItem.Vaid,
 				Timestamp:       now.UnixNano() / 1000000,
 				PersistActivate: shouldPersistActivation,
+				QA:              activateItem.Qa,
 				QueueTime:       activateItem.Qt,
 			})
 		}
