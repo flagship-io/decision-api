@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.17'
+          go-version: '1.21'
           cache: false
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
@@ -19,7 +19,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.48
+          version: v1.56
           args: --skip-files .*_test.go
   build:
     name: Test & Coverage
@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.21"
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
       - name: Run tests
