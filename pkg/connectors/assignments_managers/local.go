@@ -5,14 +5,14 @@ import (
 	"errors"
 	"time"
 
-	"git.mills.io/prologic/bitcask"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	common "github.com/flagship-io/flagship-common"
+	"go.mills.io/bitcask/v2"
 )
 
 // LocalManager represents the local db manager object
 type LocalManager struct {
-	db           *bitcask.Bitcask
+	db           bitcask.DB
 	keySeparator string
 }
 
