@@ -1,11 +1,13 @@
 module github.com/flagship-io/decision-api
 
-go 1.17
+go 1.21
+
+toolchain go1.21.5
 
 require (
 	git.mills.io/prologic/bitcask v1.0.2
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/flagship-io/flagship-common v0.0.19
+	github.com/flagship-io/flagship-common v0.0.20
 	github.com/flagship-io/flagship-proto v0.0.22
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
