@@ -1,4 +1,8 @@
 /bin
 /dist
 /coverage
+/server
 /cmd/server/cache_data
+
+go.work
+go.work.sum
