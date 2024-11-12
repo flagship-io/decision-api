@@ -1,13 +1,11 @@
 module github.com/flagship-io/decision-api
 
-go 1.21
-
-toolchain go1.21.5
+go 1.23.3
 
 require (
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/flagship-io/flagship-common v0.0.20
-	github.com/flagship-io/flagship-proto v0.0.22
+	github.com/flagship-io/flagship-common v0.0.21
+	github.com/flagship-io/flagship-proto v0.0.23
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/sirupsen/logrus v1.9.3
@@ -16,7 +14,7 @@ require (
 	github.com/swaggo/http-swagger v1.2.8
 	github.com/swaggo/swag v1.8.1
 	go.mills.io/bitcask/v2 v2.0.3
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -35,6 +33,7 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
+	golang.org/x/mod v0.21.0 // indirect
 )
 
 require (
