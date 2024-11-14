@@ -1,4 +1,4 @@
-FROM golang:1.23.3-alpine as builder
+FROM golang:1.23.3-alpine AS builder
 RUN apk add --update make
 WORKDIR /go/src/github/flagship-io/decision-api
 
@@ -10,7 +10,7 @@ RUN go mod download
 COPY . .
 
 ARG VERSION
-ENV VERSION $VERSION
+ENV VERSION=$VERSION
 RUN make build
 
 FROM alpine:latest  
