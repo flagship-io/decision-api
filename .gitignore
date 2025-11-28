@@ -2,3 +2,4 @@
 /dist
 /coverage
 /cmd/server/cache_data
+.env
