@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  # Redis for assignment caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Decision API with Redis cache
+  decision-api:
+    image: flagshipio/decision-api:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # Flagship credentials - UPDATE THESE!
+      ENV_ID: ${ENV_ID:-your_env_id}
+      API_KEY: ${API_KEY:-your_api_key}
+
+      # Server configuration
+      ADDRESS: ":8080"
+      LOG_LEVEL: info
+      LOG_FORMAT: text
+
+      # Cache configuration (Redis for XPC)
+      CACHE_TYPE: redis
+      CACHE_OPTIONS_REDISHOST: redis:6379
+      # CORS configuration
+      CORS_ENABLED: "true"
+      CORS_ALLOWED_ORIGINS: "*"
+
+      # Polling interval for config updates
+      POLLING_INTERVAL: 60s
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Demo application
+  demo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    environment:
+      DECISION_API_URL: http://decision-api:8080
+      ENV_ID: ${ENV_ID:-your_env_id}
+      API_KEY: ${API_KEY:-your_api_key}
+    depends_on:
+      decision-api:
+        condition: service_healthy
+    profiles:
+      - demo
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: flagship-demo
