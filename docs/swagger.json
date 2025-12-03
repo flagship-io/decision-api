@@ -26,7 +26,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Campaigns"
+                    "Activate"
                 ],
                 "summary": "Activate a campaign",
                 "operationId": "activate",
