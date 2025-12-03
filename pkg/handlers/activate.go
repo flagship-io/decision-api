@@ -18,7 +18,7 @@ import (
 
 // Activate returns a flag activation handler
 // @Summary Activate a campaign
-// @Tags Campaigns
+// @Tags Activate
 // @Description Activate a campaign for a visitor ID
 // @ID activate
 // @Accept  json
