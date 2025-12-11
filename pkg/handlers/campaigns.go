@@ -37,9 +37,11 @@ func Campaigns(context *connectors.DecisionContext) func(http.ResponseWriter, *h
 
 func toAccountSettings(e *models.Environment) *decision_response.AccountSettings {
 	return &decision_response.AccountSettings{
-		EnabledXPC:      e.Common.UseReconciliation,
-		Enabled1V1T:     e.Common.SingleAssignment,
-		Troubleshooting: e.Common.Troubleshooting,
+		EnabledXPC:           e.Common.UseReconciliation,
+		Enabled1V1T:          e.Common.SingleAssignment,
+		EaiCollectEnabled:    e.Common.EaiCollectEnabled,
+		EaiActivationEnabled: e.Common.EaiActivationEnabled,
+		Troubleshooting:      e.Common.Troubleshooting,
 	}
 }
 

@@ -136,12 +136,14 @@ func (l *CDNLoader) fetchEnvironment(envID string, APIKey string) error {
 	l.lock.Lock()
 	l.loadedEnvironment = &models.Environment{
 		Common: &common.Environment{
-			ID:                envID,
-			Campaigns:         campaigns,
-			IsPanic:           conf.Panic,
-			SingleAssignment:  conf.AccountSettings.Enabled1V1T,
-			UseReconciliation: conf.AccountSettings.EnabledXPC || conf.VisitorConsolidation,
-			CacheEnabled:      true,
+			ID:                   envID,
+			Campaigns:            campaigns,
+			IsPanic:              conf.Panic,
+			SingleAssignment:     conf.AccountSettings.Enabled1V1T,
+			UseReconciliation:    conf.AccountSettings.EnabledXPC || conf.VisitorConsolidation,
+			EaiCollectEnabled:    conf.AccountSettings.EaiCollectEnabled,
+			EaiActivationEnabled: conf.AccountSettings.EaiActivationEnabled,
+			CacheEnabled:         true,
 		},
 		HasIntegrations: false,
 	}

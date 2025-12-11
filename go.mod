@@ -4,8 +4,8 @@ go 1.23.3
 
 require (
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/flagship-io/flagship-common v0.0.21
-	github.com/flagship-io/flagship-proto v0.0.23
+	github.com/flagship-io/flagship-common v0.0.23
+	github.com/flagship-io/flagship-proto v0.0.24
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/sirupsen/logrus v1.9.3
