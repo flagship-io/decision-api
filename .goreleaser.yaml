@@ -1,5 +1,7 @@
+version: 2
+
 builds:
   - 
     main: ./cmd/server
     ldflags:
-      - -X github.com/flagship-io/decision-api/pkg/models.Version={{ .Tag }}
+      - -s -w -X github.com/flagship-io/decision-api/pkg/models.Version={{ .Tag }}

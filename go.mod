@@ -2,6 +2,8 @@ module github.com/flagship-io/decision-api
 
 go 1.23.3
 
+toolchain go1.27.0
+
 require (
 	github.com/aws/aws-sdk-go v1.40.45
 	github.com/flagship-io/flagship-common v0.0.23
