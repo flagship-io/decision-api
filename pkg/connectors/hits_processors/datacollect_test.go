@@ -102,15 +102,42 @@ func TestDataCollectTrack(t *testing.T) {
 // countingCollector records every hit id received, so a test can assert that none was lost
 // and none was sent twice.
 type countingCollector struct {
-	lock   sync.Mutex
-	server *httptest.Server
-	ids    []string
+	lock          sync.Mutex
+	server        *httptest.Server
+	ids           []string
+	requestCount  int
+	largest       int
+	delay         time.Duration
+	failures      int
+	failureStatus int
 }
 
 func newCountingCollector() *countingCollector {
 	c := &countingCollector{}
 	c.server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		body, _ := io.ReadAll(req.Body)
+
+		c.lock.Lock()
+		c.requestCount++
+		if len(body) > c.largest {
+			c.largest = len(body)
+		}
+		failing := c.failures > 0
+		if failing {
+			c.failures--
+		}
+		first := c.requestCount == 1
+		delay := c.delay
+		c.lock.Unlock()
+
+		if failing {
+			rw.WriteHeader(c.failureStatus)
+			return
+		}
+		if first {
+			time.Sleep(delay)
+		}
+
 		batch := &batchHit{}
 		if err := json.Unmarshal(body, batch); err == nil {
 			c.lock.Lock()
@@ -123,6 +150,18 @@ func newCountingCollector() *countingCollector {
 		_, _ = rw.Write([]byte("{}"))
 	}))
 	return c
+}
+
+func (c *countingCollector) requests() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.requestCount
+}
+
+func (c *countingCollector) largestBody() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.largest
 }
 
 func (c *countingCollector) received() []string {
@@ -205,4 +244,118 @@ func TestDataCollectTrackDoesNotBlockOnBatchingWindow(t *testing.T) {
 
 	t.Logf("slowest TrackHits call: %v (batching window %v)", slowest, window)
 	assert.Less(t, slowest, window/2, "TrackHits waited for the batching window")
+}
+
+// TestDataCollectShutdownDeliversEveryHit checks that no hit is lost when the process stops while a
+// request is in flight: Shutdown must wait for it and flush whatever is still pending.
+func TestDataCollectShutdownDeliversEveryHit(t *testing.T) {
+	collector := newCountingCollector()
+	// Only the first request is slow, so it is still in flight when Shutdown is called.
+	collector.delay = 500 * time.Millisecond
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(5, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < 8; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	// 5 hits are being sent by a slow collector, 3 are still pending.
+	assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Equal(t, 8, len(collector.received()), "Shutdown did not deliver every hit")
+}
+
+// TestDataCollectSplitsOversizedBatch checks that a batch too large for one request is split
+// instead of being sent as a single body the collector may not be able to read in time.
+func TestDataCollectSplitsOversizedBatch(t *testing.T) {
+	collector := newCountingCollector()
+	defer collector.server.Close()
+
+	const hits = 40
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(hits, time.Hour),
+		WithSendOptions(2048, 0, 0),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < hits; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+				Context:   map[string]interface{}{"key": "a fairly long segment value to take room"},
+			}},
+		}))
+	}
+	assert.Nil(t, processor.Shutdown(context.Background()))
+
+	assert.Equal(t, hits, len(collector.received()), "splitting lost or duplicated hits")
+	assert.Greater(t, collector.requests(), 1, "the oversized batch was sent as a single request")
+	assert.LessOrEqual(t, collector.largestBody(), 2048, "a request body went over the limit")
+}
+
+// TestDataCollectRetriesFailedSend checks that a failing collector does not cost us the batch, and
+// that a rejected request is not retried.
+func TestDataCollectRetriesFailedSend(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		status           int
+		expectedRequests int
+		expectedHits     int
+	}{
+		{name: "server error is retried", status: http.StatusServiceUnavailable, expectedRequests: 3, expectedHits: 1},
+		{name: "rejected request is not retried", status: http.StatusBadRequest, expectedRequests: 1, expectedHits: 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			collector := newCountingCollector()
+			collector.failures = 2
+			collector.failureStatus = tc.status
+			defer collector.server.Close()
+
+			processor := NewDataCollectProcessor(
+				WithBatchOptions(1, time.Hour),
+				WithSendOptions(defaultMaxBatchBytes, 2, time.Millisecond),
+				WithTrackingURL(collector.server.URL))
+
+			assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+				VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
+			}))
+			assert.Nil(t, processor.Shutdown(context.Background()))
+
+			assert.Equal(t, tc.expectedRequests, collector.requests())
+			assert.Equal(t, tc.expectedHits, len(collector.received()))
+		})
+	}
+}
+
+// TestDataCollectShutdownDeliversHitsFlushedByTheWindow covers the default path: a flush started by
+// the batching window rather than by a full batch must also be waited for.
+func TestDataCollectShutdownDeliversHitsFlushedByTheWindow(t *testing.T) {
+	collector := newCountingCollector()
+	collector.delay = 500 * time.Millisecond
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1000, 50*time.Millisecond),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < 5; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	// Let the batching window start a flush, then stop while it is still in flight.
+	time.Sleep(150 * time.Millisecond)
+	assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Equal(t, 5, len(collector.received()), "Shutdown did not wait for the periodic flush")
 }
