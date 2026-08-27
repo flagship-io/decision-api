@@ -106,19 +106,19 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 			time.Sleep(processor.batchingWindow)
 			processor.lock.Lock()
 			durationSinceLastTick := time.Since(processor.lastTick)
-			// If last tick was trigger in between because of full batch, wait a little more
+			processor.lock.Unlock()
+			// If last tick was triggered in between because of full batch, wait a little more.
+			// Never hold the lock while waiting: TrackHits takes it on every request.
 			if durationSinceLastTick < processor.batchingWindow {
 				time.Sleep(processor.batchingWindow - durationSinceLastTick)
 			}
-			processor.lock.Unlock()
 			processor.ticker <- time.Now()
 		}
 	}()
 
 	go func() {
 		for t := range processor.ticker {
-			processor.sendHits(processor.hits, t)
-			processor.hits = []models.MappableHit{}
+			processor.sendHits(processor.takeHits(), t)
 		}
 	}()
 
@@ -185,6 +185,17 @@ func (d *DataCollectProcessor) sendHits(hits []models.MappableHit, tick time.Tim
 	d.lock.Unlock()
 }
 
+// takeHits detaches the pending hits from the processor and returns them.
+// The caller owns the returned slice, so it can be sent without holding the lock.
+func (d *DataCollectProcessor) takeHits() []models.MappableHit {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	hits := d.hits
+	d.hits = []models.MappableHit{}
+	return hits
+}
+
 // TrackHits adds the given hits to the processor for tracking.
 // If the number of hits in the processor exceeds the batch size, a batch of hits is sent.
 func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
@@ -195,16 +206,22 @@ func (d *DataCollectProcessor) TrackHits(hits connectors.TrackingHits) error {
 	for _, vc := range hits.VisitorContext {
 		mappableHits = append(mappableHits, vc)
 	}
+
+	// Append and detach under the same lock, so concurrent calls cannot send the same hits twice.
+	var batch []models.MappableHit
+	d.lock.Lock()
 	d.hits = append(d.hits, mappableHits...)
 	if len(d.hits) >= d.batchSize {
-		go d.sendHits(d.hits, time.Now())
-		d.lock.Lock()
-		d.hits = []models.MappableHit{}
-		d.lock.Unlock()
+		batch, d.hits = d.hits, []models.MappableHit{}
+	}
+	d.lock.Unlock()
+
+	if len(batch) > 0 {
+		go d.sendHits(batch, time.Now())
 	}
 	return nil
 }
 
 func (d *DataCollectProcessor) Shutdown(ctx context.Context) error {
-	return d.sendBatchHit(ctx, d.hits)
+	return d.sendBatchHit(ctx, d.takeHits())
 }
