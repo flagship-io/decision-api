@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"syscall"
 	"testing"
 	"time"
@@ -36,8 +35,9 @@ func TestCreateServer(t *testing.T) {
 }
 
 func TestMain(t *testing.T) {
-	os.Setenv("API_KEY", "api_key")
-	os.Setenv("ENV_ID", "env_id")
+	// t.Setenv restores the previous value: leaving these set changes what the other tests see.
+	t.Setenv("API_KEY", "api_key")
+	t.Setenv("ENV_ID", "env_id")
 	go func() {
 		time.Sleep(2 * time.Second)
 		err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
