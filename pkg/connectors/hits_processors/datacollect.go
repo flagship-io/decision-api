@@ -288,7 +288,7 @@ func (d *DataCollectProcessor) do(ctx context.Context, body []byte) (retryable b
 	if err != nil {
 		return true, fmt.Errorf("error when making HTTP request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 500 {
 		return true, fmt.Errorf("got status %v when calling HTTP request", resp.Status)
