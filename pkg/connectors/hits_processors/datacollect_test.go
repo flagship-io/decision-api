@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -110,6 +112,8 @@ type countingCollector struct {
 	delay         time.Duration
 	failures      int
 	failureStatus int
+	userAgents    []string
+	bodies        []string
 }
 
 func newCountingCollector() *countingCollector {
@@ -119,6 +123,8 @@ func newCountingCollector() *countingCollector {
 
 		c.lock.Lock()
 		c.requestCount++
+		c.userAgents = append(c.userAgents, req.Header.Get("User-Agent"))
+		c.bodies = append(c.bodies, string(body))
 		if len(body) > c.largest {
 			c.largest = len(body)
 		}
@@ -162,6 +168,24 @@ func (c *countingCollector) largestBody() int {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	return c.largest
+}
+
+func (c *countingCollector) lastBody() string {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if len(c.bodies) == 0 {
+		return ""
+	}
+	return c.bodies[len(c.bodies)-1]
+}
+
+func (c *countingCollector) lastUserAgent() string {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if len(c.userAgents) == 0 {
+		return ""
+	}
+	return c.userAgents[len(c.userAgents)-1]
 }
 
 func (c *countingCollector) received() []string {
@@ -379,4 +403,42 @@ func TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime(t *testing.T) {
 	assert.ErrorIs(t, err, context.DeadlineExceeded, "Shutdown should report that it ran out of time")
 	assert.Equal(t, []string{"visitor_2"}, collector.received(),
 		"the buffered hit was dropped instead of being flushed")
+}
+
+// TestDataCollectIdentifiesItself checks that a request says which software sent it, and that the
+// batch repeats it in a field placed before the hits so a truncated body still carries it.
+func TestDataCollectIdentifiesItself(t *testing.T) {
+	collector := newCountingCollector()
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+		VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
+	}))
+	assert.Nil(t, processor.Shutdown(context.Background()))
+
+	assert.Contains(t, collector.lastUserAgent(), "flagship-decision-api/")
+	assert.Contains(t, collector.lastUserAgent(), "self-hosted")
+	assert.Contains(t, collector.lastUserAgent(), runtime.Version())
+
+	body := collector.lastBody()
+	assert.Contains(t, body, `"runner, self-hosted"`)
+	assert.Less(t, strings.Index(body, `"cv"`), strings.Index(body, `"h"`),
+		"cv must come before h, so a truncated body still identifies the sender")
+}
+
+// TestVersionReportsTheBuild covers the other half of version(): a released binary carries a tag,
+// and the User-Agent has to report it rather than the placeholder.
+func TestVersionReportsTheBuild(t *testing.T) {
+	original := models.Version
+	defer func() { models.Version = original }()
+
+	models.Version = "v1.2.3"
+	assert.Equal(t, "v1.2.3", version())
+
+	models.Version = ""
+	assert.Equal(t, "unknown", version(), "a build with no version stamped must say so")
 }

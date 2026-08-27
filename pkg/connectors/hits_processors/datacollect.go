@@ -35,11 +35,26 @@ const defaultMaxBatchBytes = 512 * 1024
 // logName is the name of the logger used by the DataCollect Processor.
 const logName = "DataCollect Processor"
 
+// userAgent identifies this binary to the collector. Headers are sent before the body, so it is
+// readable even for a request that never finished.
+var userAgent = fmt.Sprintf("flagship-decision-api/%s (self-hosted; %s) Go-http-client/2.0",
+	version(), runtime.Version())
+
+// version reports the version stamped at build time, or "unknown" for a build that carries none.
+func version() string {
+	if models.Version == "" {
+		return "unknown"
+	}
+	return models.Version
+}
+
 type batchHit struct {
-	Type            string                   `json:"t"`
-	DataSource      string                   `json:"ds"`
-	Hits            []map[string]interface{} `json:"h"`
+	Type       string `json:"t"`
+	DataSource string `json:"ds"`
+	// CustomVariables come before the hits so that a body captured after being cut short - a
+	// rejected request, a log - still names the sender in the bytes that did arrive.
 	CustomVariables map[string]string        `json:"cv"`
+	Hits            []map[string]interface{} `json:"h"`
 }
 
 type DataCollectProcessor struct {
@@ -204,7 +219,7 @@ func (d *DataCollectProcessor) post(ctx context.Context, hits []map[string]inter
 		Hits:       hits,
 		CustomVariables: map[string]string{
 			"0": "runner, self-hosted",
-			"1": fmt.Sprintf("version, %s", models.Version),
+			"1": fmt.Sprintf("version, %s", version()),
 			"2": fmt.Sprintf("go-version, %s", runtime.Version()),
 		},
 	}
@@ -236,6 +251,8 @@ func (d *DataCollectProcessor) do(ctx context.Context, body []byte) error {
 	if err != nil {
 		return fmt.Errorf("error when building the request: %v", err)
 	}
+
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
