@@ -45,6 +45,10 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: flagshipio/decision-api
+
+      - name: Set output
+        id: vars
+        run: echo "tag=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
       
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -58,5 +62,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            VERSION=${GITHUB_REF##*/}
+            VERSION=${{ steps.vars.outputs.tag }}
           context: ./
