@@ -47,3 +47,28 @@ func TestGetDurationDefault(t *testing.T) {
 	val = cfg.GetDurationDefault("not_exists", 2*time.Minute)
 	assert.Equal(t, 2*time.Minute, val)
 }
+
+func TestGetBoolDefault(t *testing.T) {
+	cfg, _ := NewFromFilename("")
+
+	assert.True(t, cfg.GetBoolDefault("not_exists", true), "an unset key must keep the default")
+	assert.False(t, cfg.GetBoolDefault("not_exists", false))
+
+	// The case that matters for an option that is on by default: turning it off has to work, and
+	// GetBool alone cannot tell "set to false" apart from "not set".
+	cfg.Set("test", false)
+	assert.False(t, cfg.GetBoolDefault("test", true), "an option defaulting to true could not be turned off")
+
+	cfg.Set("test", true)
+	assert.True(t, cfg.GetBoolDefault("test", false))
+}
+
+// TestGetBoolDefaultFromEnvironment covers how an operator actually turns an option off in a
+// container: the environment variable, not the configuration file.
+func TestGetBoolDefaultFromEnvironment(t *testing.T) {
+	t.Setenv("HITS_DEDUPLICATE_CONTEXT", "false")
+	cfg, _ := NewFromFilename("")
+
+	assert.False(t, cfg.GetBoolDefault("hits.deduplicate_context", true),
+		"HITS_DEDUPLICATE_CONTEXT=false must turn off an option that defaults to true")
+}

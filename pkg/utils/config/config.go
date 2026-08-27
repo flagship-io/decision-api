@@ -52,6 +52,16 @@ func (c *Config) GetIntDefault(key string, def int) int {
 	return c.Viper.GetInt(key)
 }
 
+// GetBoolDefault is what an option that defaults to true needs: GetBool reads an unset key as
+// false, which would make such an option impossible to leave on by omission.
+func (c *Config) GetBoolDefault(key string, def bool) bool {
+	if !c.IsSet(key) {
+		return def
+	}
+
+	return c.GetBool(key)
+}
+
 func (c *Config) GetDurationDefault(key string, def time.Duration) time.Duration {
 	if !c.Viper.IsSet(key) {
 		return def

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/flagship-io/decision-api/pkg/connectors"
 	"github.com/flagship-io/decision-api/pkg/connectors/assignments_managers"
+	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
 	"github.com/flagship-io/decision-api/pkg/utils/logger"
 )
@@ -52,4 +53,27 @@ func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.As
 	}
 
 	return assignmentsManager, err
+}
+
+func getHitsProcessor(cfg *config.Config, logLvl string, logFmt logger.LogFormat) connectors.HitsProcessor {
+	var hitsProcessor connectors.HitsProcessor = hits_processors.NewDataCollectProcessor(
+		hits_processors.WithLogger(logLvl, logFmt),
+		// Unset keys read as zero, which every option below replaces with its default.
+		hits_processors.WithBatchOptions(
+			cfg.GetInt("hits.batch_size"),
+			cfg.GetDuration("hits.batching_window")),
+		hits_processors.WithSendOptions(cfg.GetInt("hits.max_batch_bytes")),
+	)
+
+	// On unless turned off. Every distinct context still reaches the collector at least once per
+	// TTL, so what a visitor was segmented on is unchanged - only the number of times it is repeated.
+	if cfg.GetBoolDefault("hits.deduplicate_context", true) {
+		hitsProcessor = hits_processors.NewContextDeduplicator(
+			hitsProcessor,
+			cfg.GetIntDefault("hits.context_max_entries", hits_processors.DefaultContextMaxEntries),
+			cfg.GetDurationDefault("hits.context_ttl", hits_processors.DefaultContextTTL),
+			logLvl, logFmt)
+	}
+
+	return hitsProcessor
 }
