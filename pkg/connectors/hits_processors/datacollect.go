@@ -19,6 +19,11 @@ import (
 // defaultBatchingWindow is the default time duration for batching hits.
 const defaultBatchingWindow = time.Second * 30
 
+// minBatchingWindow is the shortest window accepted. A duration written without a unit is read as
+// nanoseconds, so a window meant to be "30" would otherwise turn the batching goroutine into a spin
+// loop, taking the lock TrackHits needs millions of times a second.
+const minBatchingWindow = time.Second
+
 // defaultBatchSize is the default number of hits to include in a batch.
 const defaultBatchSize = 50
 
@@ -75,9 +80,20 @@ type DataCollectProcessor struct {
 
 type DatacollectOptionBuilder func(*DataCollectProcessor)
 
-// WithBatchOptions is an option function that sets the batch size and window for the DataCollectProcessor.
+// WithBatchOptions is an option function that sets the batch size and window for the
+// DataCollectProcessor. Values that would stop hits from being batched at all fall back to the
+// defaults.
 func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
+		if batchSize <= 0 {
+			l.logger.Warnf("batch size %d is not usable, using %d", batchSize, defaultBatchSize)
+			batchSize = defaultBatchSize
+		}
+		if batchingWindow < minBatchingWindow {
+			l.logger.Warnf("batching window %s is shorter than %s, using %s. Durations need a unit, "+
+				"for instance 30s", batchingWindow, minBatchingWindow, defaultBatchingWindow)
+			batchingWindow = defaultBatchingWindow
+		}
 		l.batchSize = batchSize
 		l.batchingWindow = batchingWindow
 	}
@@ -88,6 +104,7 @@ func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOp
 func WithSendOptions(maxBatchBytes int) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		if maxBatchBytes <= 0 {
+			l.logger.Warnf("maximum batch size %d is not usable, using %d", maxBatchBytes, defaultMaxBatchBytes)
 			maxBatchBytes = defaultMaxBatchBytes
 		}
 		l.maxBatchBytes = maxBatchBytes
