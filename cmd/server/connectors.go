@@ -15,7 +15,9 @@ import (
 func getAssignmentsManager(cfg *config.Config) (assignmentsManager connectors.AssignmentsManager, err error) {
 	switch cfg.GetStringDefault("cache.type", "") {
 	case "memory":
-		assignmentsManager = assignments_managers.InitMemoryManager()
+		assignmentsManager = assignments_managers.InitMemoryManagerWithOptions(
+			cfg.GetIntDefault("cache.options.memoryMaxEntries", assignments_managers.DefaultMemoryMaxEntries),
+			cfg.GetDurationDefault("cache.options.memoryTtl", assignments_managers.DefaultMemoryTTL))
 	case "local":
 		assignmentsManager, err = assignments_managers.InitLocalCacheManager(assignments_managers.LocalOptions{
 			DbPath: cfg.GetStringDefault("cache.options.dbpath", "cache_data"),
