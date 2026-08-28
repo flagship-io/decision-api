@@ -4,3 +4,11 @@ linters:
   exclusions:
     paths:
       - .*_test\.go
+    rules:
+      # aws-sdk-go v1 is deprecated as a whole and support ended in July 2025, so staticcheck flags
+      # every import of it. Keeping the newest v1 is still better than pinning an old one, and the
+      # warning has nothing left to tell us until the DynamoDB manager moves to aws-sdk-go-v2.
+      - path: (cmd/server/connectors|pkg/connectors/assignments_managers/dynamo(_mock)?)\.go
+        linters:
+          - staticcheck
+        text: "SA1019: github.com/aws/aws-sdk-go"
