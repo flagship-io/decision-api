@@ -359,3 +359,64 @@ func TestDataCollectShutdownDeliversHitsFlushedByTheWindow(t *testing.T) {
 	assert.Nil(t, processor.Shutdown(context.Background()))
 	assert.Equal(t, 5, len(collector.received()), "Shutdown did not wait for the periodic flush")
 }
+
+// TestDataCollectStopsRetryingWhenTheContextEnds covers the other half of the retry loop: the
+// backoff follows the caller's context, so a shutdown budget of a few hundred milliseconds is not
+// spent waiting out several seconds of delays that can no longer be used.
+func TestDataCollectStopsRetryingWhenTheContextEnds(t *testing.T) {
+	collector := newCountingCollector()
+	collector.failures = 100
+	collector.failureStatus = http.StatusServiceUnavailable
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1000, time.Hour),
+		WithSendOptions(defaultMaxBatchBytes, 5, 500*time.Millisecond),
+		WithTrackingURL(collector.server.URL))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	err := processor.sendBatchHit(ctx, []models.MappableHit{
+		&models.VisitorContext{EnvID: "env_id", VisitorID: "visitor_id"},
+	})
+	elapsed := time.Since(start)
+
+	assert.Error(t, err)
+	assert.Less(t, elapsed, time.Second, "the backoff kept waiting after the context was done")
+	assert.LessOrEqual(t, collector.requests(), 2, "attempts continued past the context")
+}
+
+// TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime covers the branch taken when a request
+// already in flight outlives the shutdown budget. The hits still buffered are not that request's
+// problem, and dropping them would lose data the collector never saw.
+func TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime(t *testing.T) {
+	collector := newCountingCollector()
+	collector.delay = time.Second
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(2, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	// The first two hits fill the batch and start a send that will not come back in time.
+	// The third stays buffered, and is what Shutdown has to rescue.
+	for hit := 0; hit < 3; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	err := processor.Shutdown(ctx)
+
+	assert.ErrorIs(t, err, context.DeadlineExceeded, "Shutdown should report that it ran out of time")
+	assert.Equal(t, []string{"visitor_2"}, collector.received(),
+		"the buffered hit was dropped instead of being flushed")
+}
