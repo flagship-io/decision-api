@@ -442,3 +442,17 @@ func TestVersionReportsTheBuild(t *testing.T) {
 	models.Version = ""
 	assert.Equal(t, "unknown", version(), "a build with no version stamped must say so")
 }
+
+// TestDataCollectOptionsFallBackToDefaults checks that a configuration that would stop hits from
+// being sent - a zero batch size, a zero window, a negative body limit - is ignored rather than
+// applied. These values now come from the server configuration, so they can be set by mistake.
+func TestDataCollectOptionsFallBackToDefaults(t *testing.T) {
+	processor := NewDataCollectProcessor(
+		// 30 without a unit is 30 nanoseconds, which is the mistake worth guarding against.
+		WithBatchOptions(0, 30),
+		WithSendOptions(-1))
+
+	assert.Equal(t, defaultBatchSize, processor.batchSize)
+	assert.Equal(t, defaultBatchingWindow, processor.batchingWindow)
+	assert.Equal(t, defaultMaxBatchBytes, processor.maxBatchBytes)
+}
