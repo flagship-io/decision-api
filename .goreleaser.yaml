@@ -1,3 +1,6 @@
+# GoReleaser v2 refuses to run a configuration without this line.
+version: 2
+
 builds:
   - 
     main: ./cmd/server
