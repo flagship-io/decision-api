@@ -102,15 +102,42 @@ func TestDataCollectTrack(t *testing.T) {
 // countingCollector records every hit id received, so a test can assert that none was lost
 // and none was sent twice.
 type countingCollector struct {
-	lock   sync.Mutex
-	server *httptest.Server
-	ids    []string
+	lock          sync.Mutex
+	server        *httptest.Server
+	ids           []string
+	requestCount  int
+	largest       int
+	delay         time.Duration
+	failures      int
+	failureStatus int
 }
 
 func newCountingCollector() *countingCollector {
 	c := &countingCollector{}
 	c.server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		body, _ := io.ReadAll(req.Body)
+
+		c.lock.Lock()
+		c.requestCount++
+		if len(body) > c.largest {
+			c.largest = len(body)
+		}
+		failing := c.failures > 0
+		if failing {
+			c.failures--
+		}
+		first := c.requestCount == 1
+		delay := c.delay
+		c.lock.Unlock()
+
+		if failing {
+			rw.WriteHeader(c.failureStatus)
+			return
+		}
+		if first {
+			time.Sleep(delay)
+		}
+
 		batch := &batchHit{}
 		if err := json.Unmarshal(body, batch); err == nil {
 			c.lock.Lock()
@@ -123,6 +150,18 @@ func newCountingCollector() *countingCollector {
 		_, _ = rw.Write([]byte("{}"))
 	}))
 	return c
+}
+
+func (c *countingCollector) requests() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.requestCount
+}
+
+func (c *countingCollector) largestBody() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.largest
 }
 
 func (c *countingCollector) received() []string {
@@ -205,4 +244,139 @@ func TestDataCollectTrackDoesNotBlockOnBatchingWindow(t *testing.T) {
 
 	t.Logf("slowest TrackHits call: %v (batching window %v)", slowest, window)
 	assert.Less(t, slowest, window/2, "TrackHits waited for the batching window")
+}
+
+// TestDataCollectShutdownDeliversEveryHit checks that no hit is lost when the process stops while a
+// request is in flight: Shutdown must wait for it and flush whatever is still pending.
+func TestDataCollectShutdownDeliversEveryHit(t *testing.T) {
+	collector := newCountingCollector()
+	// Only the first request is slow, so it is still in flight when Shutdown is called.
+	collector.delay = 500 * time.Millisecond
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(5, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < 8; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	// 5 hits are being sent by a slow collector, 3 are still pending.
+	assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Equal(t, 8, len(collector.received()), "Shutdown did not deliver every hit")
+}
+
+// TestDataCollectSplitsOversizedBatch checks that a batch too large for one request is split
+// instead of being sent as a single body the collector may not be able to read in time.
+func TestDataCollectSplitsOversizedBatch(t *testing.T) {
+	collector := newCountingCollector()
+	defer collector.server.Close()
+
+	const hits = 40
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(hits, time.Hour),
+		WithSendOptions(2048),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < hits; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+				Context:   map[string]interface{}{"key": "a fairly long segment value to take room"},
+			}},
+		}))
+	}
+	assert.Nil(t, processor.Shutdown(context.Background()))
+
+	assert.Equal(t, hits, len(collector.received()), "splitting lost or duplicated hits")
+	assert.Greater(t, collector.requests(), 1, "the oversized batch was sent as a single request")
+	assert.LessOrEqual(t, collector.largestBody(), 2048, "a request body went over the limit")
+}
+
+// TestDataCollectDoesNotRetryAFailedSend pins the decision to send each batch exactly once: a
+// retry after a timeout can duplicate every hit in the batch, and a collector that is failing is
+// not helped by being asked again.
+func TestDataCollectDoesNotRetryAFailedSend(t *testing.T) {
+	collector := newCountingCollector()
+	collector.failures = 1
+	collector.failureStatus = http.StatusServiceUnavailable
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+		VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
+	}))
+	assert.Nil(t, processor.Shutdown(context.Background()))
+
+	assert.Equal(t, 1, collector.requests(), "a failed request was retried")
+	assert.Equal(t, 0, len(collector.received()))
+}
+
+// TestDataCollectShutdownDeliversHitsFlushedByTheWindow covers the default path: a flush started by
+// the batching window rather than by a full batch must also be waited for.
+func TestDataCollectShutdownDeliversHitsFlushedByTheWindow(t *testing.T) {
+	collector := newCountingCollector()
+	collector.delay = 500 * time.Millisecond
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1000, 50*time.Millisecond),
+		WithTrackingURL(collector.server.URL))
+
+	for hit := 0; hit < 5; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	// Let the batching window start a flush, then stop while it is still in flight.
+	time.Sleep(150 * time.Millisecond)
+	assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Equal(t, 5, len(collector.received()), "Shutdown did not wait for the periodic flush")
+}
+
+// TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime covers the branch taken when a request
+// already in flight outlives the shutdown budget. The hits still buffered are not that request's
+// problem, and dropping them would lose data the collector never saw.
+func TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime(t *testing.T) {
+	collector := newCountingCollector()
+	collector.delay = time.Second
+	defer collector.server.Close()
+
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(2, time.Hour),
+		WithTrackingURL(collector.server.URL))
+
+	// The first two hits fill the batch and start a send that will not come back in time.
+	// The third stays buffered, and is what Shutdown has to rescue.
+	for hit := 0; hit < 3; hit++ {
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{
+				EnvID:     "env_id",
+				VisitorID: fmt.Sprintf("visitor_%d", hit),
+			}},
+		}))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	err := processor.Shutdown(ctx)
+
+	assert.ErrorIs(t, err, context.DeadlineExceeded, "Shutdown should report that it ran out of time")
+	assert.Equal(t, []string{"visitor_2"}, collector.received(),
+		"the buffered hit was dropped instead of being flushed")
 }
