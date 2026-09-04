@@ -281,7 +281,7 @@ func TestDataCollectSplitsOversizedBatch(t *testing.T) {
 	const hits = 40
 	processor := NewDataCollectProcessor(
 		WithBatchOptions(hits, time.Hour),
-		WithSendOptions(2048, 0, 0),
+		WithSendOptions(2048),
 		WithTrackingURL(collector.server.URL))
 
 	for hit := 0; hit < hits; hit++ {
@@ -300,38 +300,26 @@ func TestDataCollectSplitsOversizedBatch(t *testing.T) {
 	assert.LessOrEqual(t, collector.largestBody(), 2048, "a request body went over the limit")
 }
 
-// TestDataCollectRetriesFailedSend checks that a failing collector does not cost us the batch, and
-// that a rejected request is not retried.
-func TestDataCollectRetriesFailedSend(t *testing.T) {
-	for _, tc := range []struct {
-		name             string
-		status           int
-		expectedRequests int
-		expectedHits     int
-	}{
-		{name: "server error is retried", status: http.StatusServiceUnavailable, expectedRequests: 3, expectedHits: 1},
-		{name: "rejected request is not retried", status: http.StatusBadRequest, expectedRequests: 1, expectedHits: 0},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			collector := newCountingCollector()
-			collector.failures = 2
-			collector.failureStatus = tc.status
-			defer collector.server.Close()
+// TestDataCollectDoesNotRetryAFailedSend pins the decision to send each batch exactly once: a
+// retry after a timeout can duplicate every hit in the batch, and a collector that is failing is
+// not helped by being asked again.
+func TestDataCollectDoesNotRetryAFailedSend(t *testing.T) {
+	collector := newCountingCollector()
+	collector.failures = 1
+	collector.failureStatus = http.StatusServiceUnavailable
+	defer collector.server.Close()
 
-			processor := NewDataCollectProcessor(
-				WithBatchOptions(1, time.Hour),
-				WithSendOptions(defaultMaxBatchBytes, 2, time.Millisecond),
-				WithTrackingURL(collector.server.URL))
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(1, time.Hour),
+		WithTrackingURL(collector.server.URL))
 
-			assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
-				VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
-			}))
-			assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+		VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
+	}))
+	assert.Nil(t, processor.Shutdown(context.Background()))
 
-			assert.Equal(t, tc.expectedRequests, collector.requests())
-			assert.Equal(t, tc.expectedHits, len(collector.received()))
-		})
-	}
+	assert.Equal(t, 1, collector.requests(), "a failed request was retried")
+	assert.Equal(t, 0, len(collector.received()))
 }
 
 // TestDataCollectShutdownDeliversHitsFlushedByTheWindow covers the default path: a flush started by
@@ -358,34 +346,6 @@ func TestDataCollectShutdownDeliversHitsFlushedByTheWindow(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 	assert.Nil(t, processor.Shutdown(context.Background()))
 	assert.Equal(t, 5, len(collector.received()), "Shutdown did not wait for the periodic flush")
-}
-
-// TestDataCollectStopsRetryingWhenTheContextEnds covers the other half of the retry loop: the
-// backoff follows the caller's context, so a shutdown budget of a few hundred milliseconds is not
-// spent waiting out several seconds of delays that can no longer be used.
-func TestDataCollectStopsRetryingWhenTheContextEnds(t *testing.T) {
-	collector := newCountingCollector()
-	collector.failures = 100
-	collector.failureStatus = http.StatusServiceUnavailable
-	defer collector.server.Close()
-
-	processor := NewDataCollectProcessor(
-		WithBatchOptions(1000, time.Hour),
-		WithSendOptions(defaultMaxBatchBytes, 5, 500*time.Millisecond),
-		WithTrackingURL(collector.server.URL))
-
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	defer cancel()
-
-	start := time.Now()
-	err := processor.sendBatchHit(ctx, []models.MappableHit{
-		&models.VisitorContext{EnvID: "env_id", VisitorID: "visitor_id"},
-	})
-	elapsed := time.Since(start)
-
-	assert.Error(t, err)
-	assert.Less(t, elapsed, time.Second, "the backoff kept waiting after the context was done")
-	assert.LessOrEqual(t, collector.requests(), 2, "attempts continued past the context")
 }
 
 // TestDataCollectShutdownFlushesWhatItCanWhenOutOfTime covers the branch taken when a request

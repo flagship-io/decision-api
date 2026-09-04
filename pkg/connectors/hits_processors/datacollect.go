@@ -32,12 +32,6 @@ const defaultLogLevel = "error"
 // into several requests, so a slow link cannot leave the collector with a half-written body.
 const defaultMaxBatchBytes = 512 * 1024
 
-// defaultSendRetries is how many extra attempts a failed request gets.
-const defaultSendRetries = 2
-
-// defaultRetryDelay is the delay before the first retry. It grows with each attempt.
-const defaultRetryDelay = 200 * time.Millisecond
-
 // logName is the name of the logger used by the DataCollect Processor.
 const logName = "DataCollect Processor"
 
@@ -52,8 +46,6 @@ type DataCollectProcessor struct {
 	batchingWindow time.Duration
 	batchSize      int
 	maxBatchBytes  int
-	sendRetries    int
-	retryDelay     time.Duration
 	trackingURL    string
 	hits           []models.MappableHit
 	ticker         chan time.Time
@@ -76,23 +68,14 @@ func WithBatchOptions(batchSize int, batchingWindow time.Duration) DatacollectOp
 	}
 }
 
-// WithSendOptions is an option function that sets the maximum request body size, how many extra
-// attempts a failed request gets, and the delay before the first retry. Values that would stop hits
-// from being sent at all fall back to the defaults.
-func WithSendOptions(maxBatchBytes int, sendRetries int, retryDelay time.Duration) DatacollectOptionBuilder {
+// WithSendOptions is an option function that sets the maximum request body size. A value that
+// would stop hits from being sent at all falls back to the default.
+func WithSendOptions(maxBatchBytes int) DatacollectOptionBuilder {
 	return func(l *DataCollectProcessor) {
 		if maxBatchBytes <= 0 {
 			maxBatchBytes = defaultMaxBatchBytes
 		}
-		if sendRetries < 0 {
-			sendRetries = 0
-		}
-		if retryDelay < 0 {
-			retryDelay = defaultRetryDelay
-		}
 		l.maxBatchBytes = maxBatchBytes
-		l.sendRetries = sendRetries
-		l.retryDelay = retryDelay
 	}
 }
 
@@ -123,8 +106,6 @@ func NewDataCollectProcessor(opts ...DatacollectOptionBuilder) *DataCollectProce
 		batchingWindow: defaultBatchingWindow,
 		batchSize:      defaultBatchSize,
 		maxBatchBytes:  defaultMaxBatchBytes,
-		sendRetries:    defaultSendRetries,
-		retryDelay:     defaultRetryDelay,
 		hits:           []models.MappableHit{},
 		trackingURL:    defaultTrackingURL,
 		logger:         logger.New(defaultLogLevel, logger.FORMAT_TEXT, logName),
@@ -239,7 +220,7 @@ func (d *DataCollectProcessor) post(ctx context.Context, hits []map[string]inter
 	}
 
 	d.logger.Infof("sending %d hits to datacollect", len(hits))
-	if err := d.doWithRetry(ctx, body); err != nil {
+	if err := d.do(ctx, body); err != nil {
 		return err
 	}
 	d.logger.Infof("%d hits sent to datacollect successfully", len(hits))
@@ -247,57 +228,26 @@ func (d *DataCollectProcessor) post(ctx context.Context, hits []map[string]inter
 	return nil
 }
 
-// doWithRetry posts the body, retrying a failed attempt up to sendRetries times. Only transport
-// errors and server errors are retried: a request the collector rejected would be rejected again.
-//
-// Delivery is therefore at-least-once: a request that timed out may have been received, and
-// retrying it sends the batch twice. That is deliberate - losing hits is the worse outcome.
-func (d *DataCollectProcessor) doWithRetry(ctx context.Context, body []byte) error {
-	var err error
-	for attempt := 0; attempt <= d.sendRetries; attempt++ {
-		if attempt > 0 {
-			d.logger.Warnf("retrying to send hits (attempt %d): %v", attempt, err)
-			// Backing off follows ctx, not the processor lifetime: a shutdown still gets its
-			// retries, bounded by the context the caller gave us.
-			timer := time.NewTimer(time.Duration(attempt) * d.retryDelay)
-			select {
-			case <-timer.C:
-			case <-ctx.Done():
-				timer.Stop()
-				return err
-			}
-		}
-
-		var retryable bool
-		if retryable, err = d.do(ctx, body); err == nil || !retryable {
-			return err
-		}
-	}
-
-	return err
-}
-
-// do posts the body once, and reports whether a failure is worth retrying.
-func (d *DataCollectProcessor) do(ctx context.Context, body []byte) (retryable bool, err error) {
+// do posts the body once. A failed request is not retried: a request that timed out may well
+// have been received, and sending it again would duplicate every hit in it. Losing one batch is
+// the smaller harm, and it is what the collector's other senders do as well.
+func (d *DataCollectProcessor) do(ctx context.Context, body []byte) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, d.trackingURL, bytes.NewBuffer(body))
 	if err != nil {
-		return false, fmt.Errorf("error when building the request: %v", err)
+		return fmt.Errorf("error when building the request: %v", err)
 	}
 
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
-		return true, fmt.Errorf("error when making HTTP request: %v", err)
+		return fmt.Errorf("error when making HTTP request: %v", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode >= 500 {
-		return true, fmt.Errorf("got status %v when calling HTTP request", resp.Status)
-	}
 	if resp.StatusCode >= 400 {
-		return false, fmt.Errorf("got status %v when calling HTTP request", resp.Status)
+		return fmt.Errorf("got status %v when calling HTTP request", resp.Status)
 	}
 
-	return false, nil
+	return nil
 }
 
 func (d *DataCollectProcessor) sendHits(hits []models.MappableHit, tick time.Time) {
