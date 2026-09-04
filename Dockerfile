@@ -1,4 +1,4 @@
-FROM golang:1.23.3-alpine AS builder
+FROM golang:1.26.7-alpine AS builder
 RUN apk add --update make
 WORKDIR /go/src/github/flagship-io/decision-api
 
