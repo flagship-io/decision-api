@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/flagship-io/decision-api/pkg/connectors/environment_loaders"
-	"github.com/flagship-io/decision-api/pkg/connectors/hits_processors"
 	"github.com/flagship-io/decision-api/pkg/models"
 	"github.com/flagship-io/decision-api/pkg/server"
 	"github.com/flagship-io/decision-api/pkg/utils/config"
@@ -46,14 +45,7 @@ func createServer(cfg *config.Config, log *logger.Logger) (*server.Server, error
 				environment_loaders.WithLogger(logLvl, logger.LogFormat(logFmt)),
 				environment_loaders.WithPollingInterval(cfg.GetDuration("polling_interval"))),
 		),
-		server.WithHitsProcessor(hits_processors.NewDataCollectProcessor(
-			hits_processors.WithLogger(logLvl, logger.LogFormat(logFmt)),
-			// Unset keys read as zero, which every option below replaces with its default.
-			hits_processors.WithBatchOptions(
-				cfg.GetInt("hits.batch_size"),
-				cfg.GetDuration("hits.batching_window")),
-			hits_processors.WithSendOptions(cfg.GetInt("hits.max_batch_bytes")),
-		)),
+		server.WithHitsProcessor(getHitsProcessor(cfg, logLvl, logger.LogFormat(logFmt))),
 		server.WithAssignmentsManager(assignmentManager),
 		server.WithCorsOptions(&models.CorsOptions{
 			Enabled:        cfg.GetBool("cors.enabled"),
