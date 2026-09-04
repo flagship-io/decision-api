@@ -1,7 +1,9 @@
 package hits_processors
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -95,4 +97,112 @@ func TestDataCollectTrack(t *testing.T) {
 		"key": "value",
 	}, batch.Hits[1]["s"])
 	assert.True(t, batch.Hits[1]["qt"].(float64) < 1010 && batch.Hits[1]["qt"].(float64) >= 1000)
+}
+
+// countingCollector records every hit id received, so a test can assert that none was lost
+// and none was sent twice.
+type countingCollector struct {
+	lock   sync.Mutex
+	server *httptest.Server
+	ids    []string
+}
+
+func newCountingCollector() *countingCollector {
+	c := &countingCollector{}
+	c.server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		body, _ := io.ReadAll(req.Body)
+		batch := &batchHit{}
+		if err := json.Unmarshal(body, batch); err == nil {
+			c.lock.Lock()
+			for _, hit := range batch.Hits {
+				id, _ := hit["vid"].(string)
+				c.ids = append(c.ids, id)
+			}
+			c.lock.Unlock()
+		}
+		_, _ = rw.Write([]byte("{}"))
+	}))
+	return c
+}
+
+func (c *countingCollector) received() []string {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return append([]string{}, c.ids...)
+}
+
+// TestDataCollectTrackConcurrentlyLosesNoHit sends hits from many goroutines at once and checks
+// that the collector receives every hit exactly once. Before the batching fix, concurrent callers
+// could send the same pending hits several times, and hits appended during a flush were dropped.
+func TestDataCollectTrackConcurrentlyLosesNoHit(t *testing.T) {
+	collector := newCountingCollector()
+	defer collector.server.Close()
+
+	const callers, hitsPerCaller = 50, 20
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(10, 50*time.Millisecond),
+		WithTrackingURL(collector.server.URL))
+
+	wg := &sync.WaitGroup{}
+	for caller := 0; caller < callers; caller++ {
+		wg.Add(1)
+		go func(caller int) {
+			defer wg.Done()
+			for hit := 0; hit < hitsPerCaller; hit++ {
+				err := processor.TrackHits(connectors.TrackingHits{
+					VisitorContext: []*models.VisitorContext{{
+						EnvID:     "env_id",
+						VisitorID: fmt.Sprintf("visitor_%d_%d", caller, hit),
+						Context:   map[string]interface{}{"key": "value"},
+					}},
+				})
+				assert.Nil(t, err)
+			}
+		}(caller)
+	}
+	wg.Wait()
+
+	assert.Nil(t, processor.Shutdown(context.Background()))
+	assert.Eventually(t, func() bool {
+		return len(collector.received()) >= callers*hitsPerCaller
+	}, 5*time.Second, 20*time.Millisecond, "not every hit reached the collector")
+
+	received := collector.received()
+	seen := map[string]int{}
+	for _, id := range received {
+		seen[id]++
+	}
+	assert.Equal(t, callers*hitsPerCaller, len(received), "hits were duplicated or lost")
+	assert.Equal(t, callers*hitsPerCaller, len(seen), "the same hit was sent more than once")
+}
+
+// TestDataCollectTrackDoesNotBlockOnBatchingWindow checks that TrackHits stays fast while the
+// batching window elapses. The window used to be waited out while holding the lock TrackHits
+// needs, which made every request pay for it.
+func TestDataCollectTrackDoesNotBlockOnBatchingWindow(t *testing.T) {
+	collector := newCountingCollector()
+	defer collector.server.Close()
+
+	window := 500 * time.Millisecond
+	// A small batch size matters: it makes a size flush happen, which sets lastTick. Without it the
+	// window is never actually waited out and the test would pass even on the unfixed code.
+	processor := NewDataCollectProcessor(
+		WithBatchOptions(10, window),
+		WithTrackingURL(collector.server.URL))
+
+	deadline := time.Now().Add(4 * window)
+	slowest := time.Duration(0)
+	for time.Now().Before(deadline) {
+		start := time.Now()
+		assert.Nil(t, processor.TrackHits(connectors.TrackingHits{
+			VisitorContext: []*models.VisitorContext{{EnvID: "env_id", VisitorID: "visitor_id"}},
+		}))
+		if elapsed := time.Since(start); elapsed > slowest {
+			slowest = elapsed
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	t.Logf("slowest TrackHits call: %v (batching window %v)", slowest, window)
+	assert.Less(t, slowest, window/2, "TrackHits waited for the batching window")
 }
