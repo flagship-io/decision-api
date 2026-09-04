@@ -35,6 +35,8 @@ jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    # Same gate as the release job: an image is never published from a tag whose tests failed.
+    needs: test
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -45,6 +47,10 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: flagshipio/decision-api
+
+      - name: Set output
+        id: vars
+        run: echo "tag=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
       
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -58,5 +64,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            VERSION=${GITHUB_REF##*/}
+            VERSION=${{ steps.vars.outputs.tag }}
           context: ./
