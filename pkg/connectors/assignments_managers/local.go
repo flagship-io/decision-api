@@ -12,7 +12,7 @@ import (
 
 // LocalManager represents the local db manager object
 type LocalManager struct {
-	db           bitcask.DB
+	db           *bitcask.Bitcask
 	keySeparator string
 }
 

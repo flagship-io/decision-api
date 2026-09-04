@@ -17,7 +17,10 @@ func TestGetAssignmentsManager(t *testing.T) {
 	assert.Nil(t, err)
 	assert.IsType(t, assignmentsManager, &assignments_managers.EmptyManager{})
 
+	// A fresh directory per run: the local store keeps a lock on it, so reusing one path fails as
+	// soon as the test runs more than once in the same process.
 	cfg.Set("cache.type", "local")
+	cfg.Set("cache.options.dbpath", t.TempDir())
 	assignmentsManager, err = getAssignmentsManager(cfg)
 	assert.Nil(t, err)
 	assert.IsType(t, &assignments_managers.LocalManager{}, assignmentsManager)
